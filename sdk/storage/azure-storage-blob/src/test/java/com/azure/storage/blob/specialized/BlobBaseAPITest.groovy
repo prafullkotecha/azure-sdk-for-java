@@ -5,6 +5,7 @@ import com.azure.storage.blob.BlobClient
 import com.azure.storage.blob.models.*
 import com.azure.storage.blob.options.BlobQueryOptions
 import com.azure.storage.common.implementation.Constants
+import spock.lang.Ignore
 import reactor.core.Exceptions
 import spock.lang.Requires
 import spock.lang.Unroll
@@ -593,6 +594,23 @@ class BlobBaseAPITest extends APISpec {
         false   | true     || _
     }
 
+    def "Query error"() {
+        setup:
+        bc = cc.getBlobClient(generateBlobName())
+
+        when:
+        bc.openQueryInputStream("SELECT * from BlobStorage") /* Don't need to call read. */
+
+        then:
+        thrown(BlobStorageException)
+
+        when:
+        bc.query(new ByteArrayOutputStream(), "SELECT * from BlobStorage")
+
+        then:
+        thrown(BlobStorageException)
+    }
+
     @Unroll
     def "Query AC"() {
         setup:
@@ -710,11 +728,7 @@ class BlobBaseAPITest extends APISpec {
         }
     }
 
-    class RandomOtherSerialization extends BlobQuerySerialization {
-        @Override
-        public RandomOtherSerialization setRecordSeparator(char recordSeparator) {
-            this.recordSeparator = recordSeparator
-            return this
-        }
+    class RandomOtherSerialization implements BlobQuerySerialization {
+
     }
 }

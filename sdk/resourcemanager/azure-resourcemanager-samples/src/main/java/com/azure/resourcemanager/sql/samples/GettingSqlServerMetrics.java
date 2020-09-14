@@ -9,21 +9,20 @@ import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.management.AzureEnvironment;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.resourcemanager.Azure;
+import com.azure.resourcemanager.monitor.fluent.inner.MetadataValueInner;
 import com.azure.resourcemanager.monitor.models.Metric;
 import com.azure.resourcemanager.monitor.models.MetricCollection;
 import com.azure.resourcemanager.monitor.models.MetricDefinition;
 import com.azure.resourcemanager.monitor.models.MetricValue;
 import com.azure.resourcemanager.monitor.models.TimeSeriesElement;
-import com.azure.resourcemanager.monitor.fluent.inner.MetadataValueInner;
 import com.azure.resourcemanager.resources.fluentcore.arm.Region;
-import com.azure.resourcemanager.resources.fluentcore.profile.AzureProfile;
+import com.azure.core.management.profile.AzureProfile;
 import com.azure.resourcemanager.resources.fluentcore.utils.SdkContext;
 import com.azure.resourcemanager.samples.Utils;
 import com.azure.resourcemanager.sql.models.SampleName;
 import com.azure.resourcemanager.sql.models.SqlDatabase;
 import com.azure.resourcemanager.sql.models.SqlDatabaseMetric;
 import com.azure.resourcemanager.sql.models.SqlDatabaseUsageMetric;
-import com.azure.resourcemanager.sql.models.SqlElasticPool;
 import com.azure.resourcemanager.sql.models.SqlServer;
 import com.azure.resourcemanager.sql.models.SqlSubscriptionUsageMetric;
 
@@ -31,6 +30,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -51,7 +51,7 @@ public class GettingSqlServerMetrics {
      * @param azure instance of the azure client
      * @return true if sample runs successfully
      */
-    public static boolean runSample(Azure azure) {
+    public static boolean runSample(Azure azure) throws ClassNotFoundException, SQLException {
         final String sqlServerName = azure.sdkContext().randomResourceName("sqltest", 20);
         final String dbName = "dbSample";
         final String epName = "epSample";
@@ -193,8 +193,7 @@ public class GettingSqlServerMetrics {
             System.out.println("Listing the SQL database CPU metrics for the sample database");
 
             OffsetDateTime endTime = OffsetDateTime.now();
-            String filter = String.format("name/value eq 'cpu_percent' and startTime eq '%s' and endTime eq '%s'", startTime, endTime);
-
+            String filter = String.format("name/value eq 'cpu_percent' and startTime eq '%s' and endTime eq '%s'", startTime.toInstant(), endTime.toInstant());
 
             List<SqlDatabaseMetric> dbMetrics = db.listMetrics(filter);
             for (SqlDatabaseMetric metric : dbMetrics) {
@@ -206,8 +205,7 @@ public class GettingSqlServerMetrics {
             System.out.println("Listing the SQL database metrics for the sample database");
 
             endTime = OffsetDateTime.now();
-            filter = String.format("startTime eq '%s' and endTime eq '%s'", startTime, endTime);
-
+            filter = String.format("startTime eq '%s' and endTime eq '%s'", startTime.toInstant(), endTime.toInstant());
 
             dbMetrics = db.listMetrics(filter);
             for (SqlDatabaseMetric metric : dbMetrics) {
@@ -220,8 +218,6 @@ public class GettingSqlServerMetrics {
             System.out.println("Using Monitor Service to list the SQL server metrics");
             PagedIterable<MetricDefinition> metricDefinitions = azure.metricDefinitions().listByResource(sqlServer.id());
 
-            SqlElasticPool ep = sqlServer.elasticPools().get(epName);
-
             for (MetricDefinition metricDefinition : metricDefinitions) {
                 // find metric definition for "DTU used" and "Storage used"
                 if (metricDefinition.name().localizedValue().equalsIgnoreCase("dtu used")
@@ -232,7 +228,7 @@ public class GettingSqlServerMetrics {
                         .endsBefore(endTime)
                         .withAggregation("Average")
                         .withInterval(Duration.ofMinutes(5))
-                        .withOdataFilter(String.format("ElasticPoolResourceId eq '%s'", ep.id()))
+                        .withOdataFilter(String.format("DatabaseResourceId eq '%s'", db.id()))
                         .execute();
 
                     System.out.format("SQL server \"%s\" %s metrics%n", sqlServer.name(), metricDefinition.name().localizedValue());
@@ -317,9 +313,6 @@ public class GettingSqlServerMetrics {
             System.out.println("Deleting the Sql Server");
             azure.sqlServers().deleteById(sqlServer.id());
             return true;
-        } catch (Exception f) {
-            System.out.println(f.getMessage());
-            f.printStackTrace();
         } finally {
             try {
                 System.out.println("Deleting Resource Group: " + rgName);
@@ -329,7 +322,6 @@ public class GettingSqlServerMetrics {
                 System.out.println("Did not create any resources in Azure. No clean up is necessary");
             }
         }
-        return false;
     }
 
     /**

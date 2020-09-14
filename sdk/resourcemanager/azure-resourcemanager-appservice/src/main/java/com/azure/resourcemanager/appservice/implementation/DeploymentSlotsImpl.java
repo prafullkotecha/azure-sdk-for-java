@@ -13,8 +13,8 @@ import com.azure.resourcemanager.appservice.fluent.inner.SiteLogsConfigInner;
 import com.azure.resourcemanager.appservice.models.DeploymentSlot;
 import com.azure.resourcemanager.appservice.models.DeploymentSlots;
 import com.azure.resourcemanager.appservice.models.WebApp;
+import com.azure.resourcemanager.appservice.models.WebDeploymentSlotBasic;
 import com.azure.resourcemanager.resources.fluentcore.arm.collection.implementation.IndependentChildResourcesImpl;
-import com.azure.resourcemanager.resources.fluentcore.utils.PagedConverter;
 import reactor.core.publisher.Mono;
 
 /** The implementation DeploymentSlots. */
@@ -44,26 +44,6 @@ class DeploymentSlotsImpl
     }
 
     @Override
-    protected PagedFlux<DeploymentSlot> wrapPageAsync(PagedFlux<SiteInner> innerPage) {
-        return PagedConverter
-            .flatMapPage(
-                innerPage,
-                siteInner ->
-                    Mono
-                        .zip(
-                            this
-                                .inner()
-                                .getConfigurationSlotAsync(
-                                    siteInner.resourceGroup(), parent.name(), siteInner.name()),
-                            this
-                                .inner()
-                                .getDiagnosticLogsConfigurationSlotAsync(
-                                    siteInner.resourceGroup(), parent.name(), siteInner.name()),
-                            (siteConfigResourceInner, logsConfigInner) ->
-                                this.wrapModel(siteInner, siteConfigResourceInner, logsConfigInner)));
-    }
-
-    @Override
     public DeploymentSlotImpl define(String name) {
         return wrapModel(name);
     }
@@ -77,8 +57,10 @@ class DeploymentSlotsImpl
                 siteInner ->
                     Mono
                         .zip(
-                            innerCollection.getConfigurationSlotAsync(resourceGroup, parentName, name),
-                            innerCollection.getDiagnosticLogsConfigurationSlotAsync(resourceGroup, parentName, name),
+                            innerCollection.getConfigurationSlotAsync(resourceGroup, parentName,
+                                name.replaceAll(".*/", "")),
+                            innerCollection.getDiagnosticLogsConfigurationSlotAsync(resourceGroup, parentName,
+                                name.replaceAll(".*/", "")),
                             (SiteConfigResourceInner siteConfigResourceInner, SiteLogsConfigInner logsConfigInner) ->
                                 wrapModel(siteInner, siteConfigResourceInner, logsConfigInner)));
     }
@@ -104,8 +86,8 @@ class DeploymentSlotsImpl
     }
 
     @Override
-    public PagedIterable<DeploymentSlot> list() {
-        return listByParent(parent.resourceGroupName(), parent.name());
+    public PagedIterable<WebDeploymentSlotBasic> list() {
+        return new PagedIterable<>(this.listAsync());
     }
 
     @Override
@@ -124,8 +106,9 @@ class DeploymentSlotsImpl
     }
 
     @Override
-    public PagedFlux<DeploymentSlot> listAsync() {
-        return wrapPageAsync(innerCollection.listSlotsAsync(parent.resourceGroupName(), parent.name()));
+    public PagedFlux<WebDeploymentSlotBasic> listAsync() {
+        return innerCollection.listSlotsAsync(parent.resourceGroupName(), parent.name())
+            .mapPage(inner -> new WebDeploymentSlotBasicImpl(inner, parent));
     }
 
     private DeploymentSlotImpl wrapModel(

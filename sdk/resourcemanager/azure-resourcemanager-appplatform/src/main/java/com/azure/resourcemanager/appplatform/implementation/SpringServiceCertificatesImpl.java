@@ -65,7 +65,7 @@ public class SpringServiceCertificatesImpl
     }
 
     @Override
-    public Mono<?> deleteByIdAsync(String id) {
+    public Mono<Void> deleteByIdAsync(String id) {
         return deleteByNameAsync(ResourceUtils.nameFromResourceId(id));
     }
 
@@ -94,9 +94,13 @@ public class SpringServiceCertificatesImpl
         return manager().inner().getCertificates();
     }
 
-    Mono<SpringServiceCertificate> createOrUpdateAsync(String name, CertificateProperties properties) {
-        return inner().createOrUpdateAsync(
-            parent().resourceGroupName(), parent().name(), name, properties
-        ).map(this::wrapModel);
+    SpringServiceCertificate prepareCreateOrUpdate(String name, CertificateProperties properties) {
+        return prepareInlineDefine(
+            new SpringServiceCertificateImpl(
+                name, parent(), new CertificateResourceInner().withProperties(properties)));
+    }
+
+    void prepareDelete(String name) {
+        prepareInlineRemove(new SpringServiceCertificateImpl(name, parent(), new CertificateResourceInner()));
     }
 }
