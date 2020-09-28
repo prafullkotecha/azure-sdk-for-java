@@ -76,9 +76,9 @@ public class RelationshipsSyncSamples {
             .replace(SamplesConstants.RELATIONSHIP_NAME, "containedIn")
             .replace(SamplesConstants.RELATIONSHIP_TARGET_MODEL_ID, sampleBuildingModelId);
 
-        List<ModelData> createdModels = client.createModels(new ArrayList<>(Arrays.asList(buildingModelPayload, floorModelPayload)));
+        Iterable<DigitalTwinsModelData> createdModels = client.createModels(new ArrayList<>(Arrays.asList(buildingModelPayload, floorModelPayload)));
 
-        for (ModelData model : createdModels) {
+        for (DigitalTwinsModelData model : createdModels) {
             ConsoleLogger.print("Created model " + model.getId());
         }
 
@@ -88,7 +88,7 @@ public class RelationshipsSyncSamples {
             .setMetadata(new DigitalTwinMetadata()
                 .setModelId(sampleBuildingModelId));
 
-        client.createDigitalTwin(buildingTwinId, mapper.writeValueAsString(buildingDigitalTwin));
+        client.createDigitalTwin(buildingTwinId, buildingDigitalTwin, BasicDigitalTwin.class);
 
         ConsoleLogger.print("Created twin" + buildingDigitalTwin.getId());
 
@@ -97,9 +97,9 @@ public class RelationshipsSyncSamples {
             .setMetadata(new DigitalTwinMetadata()
                 .setModelId(sampleFloorModelId));
 
-        client.createDigitalTwin(floorTwinId, mapper.writeValueAsString(floorDigitalTwin));
+        BasicDigitalTwin createdTwin = client.createDigitalTwin(floorTwinId, floorDigitalTwin, BasicDigitalTwin.class);
 
-        ConsoleLogger.print("Created twin" + floorDigitalTwin.getId());
+        ConsoleLogger.print("Created twin with Id:" + createdTwin.getId());
 
         ConsoleLogger.printHeader("Create relationships");
 
@@ -108,10 +108,10 @@ public class RelationshipsSyncSamples {
             .setSourceId(buildingTwinId)
             .setTargetId(floorTwinId)
             .setName("contains")
-            .setCustomProperties("Prop1", "Prop1 value")
-            .setCustomProperties("Prop2", 6);
+            .addCustomProperty("Prop1", "Prop1 value")
+            .addCustomProperty("Prop2", 6);
 
-        client.createRelationship(buildingTwinId, buildingFloorRelationshipId, mapper.writeValueAsString(buildingFloorRelationshipPayload));
+        client.createRelationship(buildingTwinId, buildingFloorRelationshipId, buildingFloorRelationshipPayload, BasicRelationship.class);
 
         ConsoleLogger.printSuccess("Created a digital twin relationship "+ buildingFloorRelationshipId + " from twin: " + buildingTwinId + " to twin: " + floorTwinId);
 
