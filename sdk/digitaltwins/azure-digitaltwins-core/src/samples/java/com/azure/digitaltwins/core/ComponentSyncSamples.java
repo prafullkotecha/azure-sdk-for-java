@@ -78,13 +78,12 @@ public class ComponentSyncSamples {
         Iterable<DigitalTwinsModelData> modelList =  client.createModels(modelsList);
 
         for (DigitalTwinsModelData model : modelList) {
-            ConsoleLogger.print("Created model: " + model.getId());
+            ConsoleLogger.print("Created model: " + model.getModelId());
         }
 
         ConsoleLogger.printHeader("Create digital twin with components");
         // Create digital twin with component payload using the BasicDigitalTwin serialization helper.
-        BasicDigitalTwin basicTwin = new BasicDigitalTwin()
-            .setId(basicDigitalTwinId)
+        BasicDigitalTwin basicTwin = new BasicDigitalTwin(basicDigitalTwinId)
             .setMetadata(
                 new DigitalTwinMetadata()
                     .setModelId(modelId)
@@ -105,7 +104,7 @@ public class ComponentSyncSamples {
         ConsoleLogger.print("Created digital twin " + basicTwinResponse.getId());
 
         // You can get a digital twin in json string format and deserialize it on your own
-        Response<String> getStringDigitalTwinResponse = client.getDigitalTwinWithResponse(basicDigitalTwinId, String.class, Context.NONE);
+        Response<String> getStringDigitalTwinResponse = client.getDigitalTwinWithResponse(basicDigitalTwinId, String.class, null, Context.NONE);
         ConsoleLogger.print("Successfully retrieved digital twin as a json string \n" + getStringDigitalTwinResponse.getValue());
 
         BasicDigitalTwin deserializedDigitalTwin = mapper.readValue(getStringDigitalTwinResponse.getValue(), BasicDigitalTwin.class);
@@ -114,7 +113,7 @@ public class ComponentSyncSamples {
         // You can also get a digital twin using the built in deserializer into a BasicDigitalTwin.
         // It works well for basic stuff, but as you can see it gets more difficult when delving into
         // more complex properties, like components.
-        Response<BasicDigitalTwin> basicDigitalTwinResponse = client.getDigitalTwinWithResponse(basicDigitalTwinId, BasicDigitalTwin.class, Context.NONE);
+        Response<BasicDigitalTwin> basicDigitalTwinResponse = client.getDigitalTwinWithResponse(basicDigitalTwinId, BasicDigitalTwin.class, null, Context.NONE);
 
         if (basicDigitalTwinResponse.getStatusCode() == HttpsURLConnection.HTTP_OK) {
 
@@ -125,7 +124,7 @@ public class ComponentSyncSamples {
             HashMap component1 = mapper.readValue(component1RawText, HashMap.class);
 
             ConsoleLogger.print("Retrieved digital twin using generic API to use built in deserialization into a BasicDigitalTwin with Id: " + basicDigitalTwin.getId() + ":\n\t"
-                + "Etag: " + basicDigitalTwin.getTwinETag() + "\n\t"
+                + "Etag: " + basicDigitalTwin.getEtag() + "\n\t"
                 + "Prop1: " + basicDigitalTwin.getCustomProperties().get("Prop1") + "\n\t"
                 + "Prop2: " + basicDigitalTwin.getCustomProperties().get("Prop2") + "\n\t"
                 + "ComponentProp1: " + component1.get("ComponentProp1") + "\n\t"

@@ -19,12 +19,9 @@ npm install -g autorest
 
 There is one swagger for Chat management APIs. 
 
-Before generating the code, you need to run swagger_replace.ps1 to rename the swagger classes from *Request to *Options
-
 ```ps
 cd <swagger-folder>
-.\swagger_replace.ps1
-autorest README.md --java --v4 --use=@autorest/java@4.0.1
+autorest README.md --java --v4 --use=@autorest/java@4.0.2
 ```
 
 ## Update generated files for chat service
@@ -34,7 +31,7 @@ To update generated files for chat service, run the following command
 
 ### Code generation settings
 ``` yaml
-input-file: swagger.json
+input-file: https://raw.githubusercontent.com/Azure/azure-rest-api-specs/838c5092f11e8ca26e262b1f1099d5c5cdfedc3f/specification/communication/data-plane/Microsoft.CommunicationServicesChat/preview/2020-09-21-preview2/communicationserviceschat.json
 java: true
 output-folder: ..\
 license-header: MICROSOFT_MIT_SMALL

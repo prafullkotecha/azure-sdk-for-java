@@ -93,20 +93,46 @@ public final class RntbdTransportClient extends TransportClient {
 
     // region Constructors
 
+    /**
+     * Initializes a newly created {@linkplain RntbdTransportClient} object.
+     *
+     * @param configs          A {@link Configs} instance containing the {@link SslContext} to be used.
+     * @param connectionPolicy The {@linkplain ConnectionPolicy connection policy} to be applied.
+     * @param userAgent        The {@linkplain UserAgentContainer user agent} identifying.
+     * @param addressResolver  The address resolver to be used for connection endpoint rediscovery, if connection
+     *                         endpoint rediscovery is enabled by {@code connectionPolicy}.
+     */
+    public RntbdTransportClient(
+        final Configs configs,
+        final ConnectionPolicy connectionPolicy,
+        final UserAgentContainer userAgent,
+        final IAddressResolver addressResolver) {
+
+        this(
+            new Options.Builder(connectionPolicy).userAgent(userAgent).build(),
+            configs.getSslContext(),
+            addressResolver);
+    }
+
     RntbdTransportClient(final RntbdEndpoint.Provider endpointProvider) {
         this.endpointProvider = endpointProvider;
         this.id = instanceCount.incrementAndGet();
         this.tag = RntbdTransportClient.tag(this.id);
     }
 
-    RntbdTransportClient(final Options options, final SslContext sslContext) {
-        this.endpointProvider = new RntbdServiceEndpoint.Provider(this, options, sslContext);
+    RntbdTransportClient(
+        final Options options,
+        final SslContext sslContext,
+        final IAddressResolver addressResolver) {
+
+        this.endpointProvider = new RntbdServiceEndpoint.Provider(
+            this,
+            options,
+            checkNotNull(sslContext, "expected non-null sslContext"),
+            addressResolver);
+
         this.id = instanceCount.incrementAndGet();
         this.tag = RntbdTransportClient.tag(this.id);
-    }
-
-    RntbdTransportClient(final Configs configs, final ConnectionPolicy connectionPolicy, final UserAgentContainer userAgent) {
-        this(new Options.Builder(connectionPolicy).userAgent(userAgent).build(), configs.getSslContext());
     }
 
     // endregion
@@ -160,7 +186,7 @@ public final class RntbdTransportClient extends TransportClient {
             record.stage(RntbdRequestRecord.Stage.COMPLETED);
 
             if (request.requestContext.cosmosDiagnostics == null) {
-                request.requestContext.cosmosDiagnostics = BridgeInternal.createCosmosDiagnostics();
+                request.requestContext.cosmosDiagnostics = request.createCosmosDiagnostics();
             }
 
             if (response != null) {
@@ -190,7 +216,8 @@ public final class RntbdTransportClient extends TransportClient {
 
                 error = new GoneException(
                     lenientFormat("an unexpected %s occurred: %s", unexpectedError),
-                    address.toString());
+                    address,
+                    error instanceof Exception ? (Exception) error : new RuntimeException(error));
             }
 
             assert error instanceof CosmosException;
@@ -203,7 +230,7 @@ public final class RntbdTransportClient extends TransportClient {
             BridgeInternal.setRequestTimeline(cosmosException, record.takeTimelineSnapshot());
             BridgeInternal.setRntbdPendingRequestQueueSize(cosmosException, record.pendingRequestQueueSize());
             BridgeInternal.setChannelTaskQueueSize(cosmosException, record.channelTaskQueueLength());
-
+            BridgeInternal.setSendingRequestStarted(cosmosException, record.hasSendingRequestStarted());
 
             return cosmosException;
         });
@@ -223,7 +250,7 @@ public final class RntbdTransportClient extends TransportClient {
             // messages due to CompletionException errors. Anecdotal evidence shows that this is more likely to be seen
             // in low latency environments on Azure cloud. To avoid the onErrorDropped events to get logged in the
             // default hook (which logs with level ERROR) we inject a local hook in the Reactor Context to just log it
-            // as DEBUG level fro the lifecycle of this Mono (safe here because we know the onErrorDropped doesn't have
+            // as DEBUG level for the lifecycle of this Mono (safe here because we know the onErrorDropped doesn't have
             // any functional issues.
             //
             // One might be tempted to complete a pending request here, but that is ill advised. Testing and
@@ -305,6 +332,9 @@ public final class RntbdTransportClient extends TransportClient {
         private final Duration connectionAcquisitionTimeout;
 
         @JsonProperty()
+        private final boolean connectionEndpointRediscoveryEnabled;
+
+        @JsonProperty()
         private final Duration connectTimeout;
 
         @JsonProperty()
@@ -365,6 +395,7 @@ public final class RntbdTransportClient extends TransportClient {
 
             this.bufferPageSize = builder.bufferPageSize;
             this.connectionAcquisitionTimeout = builder.connectionAcquisitionTimeout;
+            this.connectionEndpointRediscoveryEnabled = builder.connectionEndpointRediscoveryEnabled;
             this.idleChannelTimeout = builder.idleChannelTimeout;
             this.idleChannelTimerResolution = builder.idleChannelTimerResolution;
             this.idleEndpointTimeout = builder.idleEndpointTimeout;
@@ -389,6 +420,7 @@ public final class RntbdTransportClient extends TransportClient {
         private Options(final ConnectionPolicy connectionPolicy) {
             this.bufferPageSize = 8192;
             this.connectionAcquisitionTimeout = Duration.ofSeconds(5L);
+            this.connectionEndpointRediscoveryEnabled = connectionPolicy.isTcpConnectionEndpointRediscoveryEnabled();
             this.connectTimeout = connectionPolicy.getConnectTimeout();
             this.idleChannelTimeout = connectionPolicy.getIdleTcpConnectionTimeout();
             this.idleChannelTimerResolution = Duration.ofMillis(100);
@@ -433,6 +465,10 @@ public final class RntbdTransportClient extends TransportClient {
 
         public Duration idleEndpointTimeout() {
             return this.idleEndpointTimeout;
+        }
+
+        public boolean isConnectionEndpointRediscoveryEnabled() {
+            return this.connectionEndpointRediscoveryEnabled;
         }
 
         public int maxBufferCapacity() {
@@ -521,6 +557,7 @@ public final class RntbdTransportClient extends TransportClient {
          * <pre>{@code RntbdTransportClient.class.getClassLoader().getResourceAsStream("azure.cosmos.directTcp.defaultOptions.json")}</pre>
          * <p>Example: <pre>{@code {
          *   "bufferPageSize": 8192,
+         *   "connectionEndpointRediscoveryEnabled": true,
          *   "connectTimeout": "PT1M",
          *   "idleChannelTimeout": "PT0S",
          *   "idleEndpointTimeout": "PT1M10S",
@@ -609,6 +646,7 @@ public final class RntbdTransportClient extends TransportClient {
 
             private int bufferPageSize;
             private final Duration connectionAcquisitionTimeout;
+            private boolean connectionEndpointRediscoveryEnabled;
             private Duration connectTimeout;
             private Duration idleChannelTimeout;
             private Duration idleChannelTimerResolution;
@@ -634,6 +672,7 @@ public final class RntbdTransportClient extends TransportClient {
 
                 this.bufferPageSize = DEFAULT_OPTIONS.bufferPageSize;
                 this.connectionAcquisitionTimeout = DEFAULT_OPTIONS.connectionAcquisitionTimeout;
+                this.connectionEndpointRediscoveryEnabled = DEFAULT_OPTIONS.connectionEndpointRediscoveryEnabled;
                 this.connectTimeout = connectionPolicy.getConnectTimeout();
                 this.idleChannelTimeout = connectionPolicy.getIdleTcpConnectionTimeout();
                 this.idleChannelTimerResolution = DEFAULT_OPTIONS.idleChannelTimerResolution;
@@ -678,6 +717,11 @@ public final class RntbdTransportClient extends TransportClient {
             public Builder connectionAcquisitionTimeout(final Duration value) {
                 checkNotNull(value, "expected non-null value");
                 this.connectTimeout = value.compareTo(Duration.ZERO) < 0 ? Duration.ZERO : value;
+                return this;
+            }
+
+            public Builder connectionEndpointRediscoveryEnabled(final boolean value) {
+                this.connectionEndpointRediscoveryEnabled = value;
                 return this;
             }
 
