@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The JUnit tests for the KeyVaultKeyStore class.
- *
- * @author Manfred Riem (manfred.riem@microsoft.com)
  */
 public class KeyVaultKeyStoreTest {
 
@@ -53,9 +51,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
         assertNull(keystore.engineGetCertificate("myalias"));
     }
@@ -65,9 +64,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
         assertNull(keystore.engineGetCertificateAlias(null));
     }
@@ -77,9 +77,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
         assertNull(keystore.engineGetCertificateChain("myalias"));
     }
@@ -89,9 +90,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
         assertFalse(keystore.engineIsCertificateEntry("myalias"));
     }
@@ -101,9 +103,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
 
         X509Certificate certificate;
@@ -125,9 +128,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
         assertNull(keystore.engineGetKey("myalias", null));
     }
@@ -137,9 +141,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
         assertFalse(keystore.engineIsKeyEntry("myalias"));
     }
@@ -161,9 +166,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
         assertTrue(keystore.engineAliases().hasMoreElements());
     }
@@ -173,9 +179,10 @@ public class KeyVaultKeyStoreTest {
         KeyVaultKeyStore keystore = new KeyVaultKeyStore();
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.engineLoad(parameter);
         assertFalse(keystore.engineContainsAlias("myalias"));
     }

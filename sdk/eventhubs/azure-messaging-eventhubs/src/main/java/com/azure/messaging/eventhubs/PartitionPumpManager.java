@@ -33,8 +33,6 @@ import com.azure.messaging.eventhubs.models.PartitionContext;
 import com.azure.messaging.eventhubs.models.PartitionEvent;
 import com.azure.messaging.eventhubs.models.PartitionOwnership;
 import com.azure.messaging.eventhubs.models.ReceiveOptions;
-import java.io.Closeable;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
@@ -128,12 +126,19 @@ class PartitionPumpManager {
      * @param ownership The partition ownership information for which the connection state will be verified.
      */
     void verifyPartitionConnection(PartitionOwnership ownership) {
-        if (partitionPumps.containsKey(ownership.getPartitionId())) {
-            EventHubConsumerAsyncClient consumerClient = partitionPumps.get(ownership.getPartitionId());
+        String partitionId = ownership.getPartitionId();
+        if (partitionPumps.containsKey(partitionId)) {
+            EventHubConsumerAsyncClient consumerClient = partitionPumps.get(partitionId);
             if (consumerClient.isConnectionClosed()) {
                 logger.info("Connection closed for {}, partition {}. Removing the consumer.",
-                    ownership.getEventHubName(), ownership.getPartitionId());
-                partitionPumps.remove(ownership.getPartitionId());
+                    ownership.getEventHubName(), partitionId);
+                try {
+                    partitionPumps.get(partitionId).close();
+                } catch (Exception ex) {
+                    logger.warning(Messages.FAILED_CLOSE_CONSUMER_PARTITION, partitionId, ex);
+                } finally {
+                    partitionPumps.remove(partitionId);
+                }
             }
         }
     }
@@ -367,19 +372,20 @@ class PartitionPumpManager {
         if (!spanScope.isPresent() || !tracerProvider.isEnabled()) {
             return;
         }
-        if (spanScope.get() instanceof Closeable) {
-            Closeable close = (Closeable) processSpanContext.getData(SCOPE_KEY).get();
+
+        Object spanObject = spanScope.get();
+        if (spanObject instanceof AutoCloseable) {
+            AutoCloseable close = (AutoCloseable) spanObject;
             try {
                 close.close();
-                tracerProvider.endSpan(processSpanContext, signal);
-            } catch (IOException ioException) {
-                logger.error(Messages.EVENT_PROCESSOR_RUN_END, ioException);
+            } catch (Exception exception) {
+                logger.error(Messages.EVENT_PROCESSOR_RUN_END, exception);
             }
 
         } else {
-            logger.warning(String.format(Locale.US,
-                Messages.PROCESS_SPAN_SCOPE_TYPE_ERROR,
-                spanScope.get() != null ? spanScope.getClass() : "null"));
+            logger.verbose(String.format(Locale.US, Messages.PROCESS_SPAN_SCOPE_TYPE_ERROR,
+                spanObject != null ? spanObject.getClass() : "null"));
         }
+        tracerProvider.endSpan(processSpanContext, signal);
     }
 }

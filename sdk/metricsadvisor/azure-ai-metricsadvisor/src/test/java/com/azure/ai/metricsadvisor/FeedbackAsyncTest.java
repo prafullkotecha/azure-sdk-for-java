@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.azure.ai.metricsadvisor.MetricsSeriesTestBase.METRIC_ID;
+import static com.azure.ai.metricsadvisor.TestUtils.DEFAULT_SUBSCRIBER_TIMEOUT_SECONDS;
 import static com.azure.ai.metricsadvisor.TestUtils.DISPLAY_NAME_WITH_ARGUMENTS;
 import static com.azure.ai.metricsadvisor.TestUtils.INCORRECT_UUID;
 import static com.azure.ai.metricsadvisor.TestUtils.INCORRECT_UUID_ERROR;
@@ -37,7 +38,6 @@ import static com.azure.ai.metricsadvisor.models.FeedbackType.CHANGE_POINT;
 import static com.azure.ai.metricsadvisor.models.FeedbackType.COMMENT;
 import static com.azure.ai.metricsadvisor.models.FeedbackType.PERIOD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FeedbackAsyncTest extends FeedbackTestBase {
     private MetricsAdvisorAsyncClient client;
@@ -45,7 +45,7 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
     @BeforeAll
     static void beforeAll() {
         TestBase.setupClass();
-        StepVerifier.setDefaultTimeout(Duration.ofSeconds(30));
+        StepVerifier.setDefaultTimeout(Duration.ofSeconds(DEFAULT_SUBSCRIBER_TIMEOUT_SECONDS));
     }
 
     @AfterAll
@@ -66,12 +66,12 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
             List<MetricFeedback> actualMetricFeedbackList = new ArrayList<>();
             List<MetricFeedback> expectedMetricFeedbackList =
                 inputMetricFeedbackList.stream().map(metricFeedback  ->
-                    client.createMetricFeedback(METRIC_ID, metricFeedback)
+                    client.addFeeddback(METRIC_ID, metricFeedback)
                     .block())
                     .collect(Collectors.toList());
 
             // Act
-            StepVerifier.create(client.listMetricFeedbacks(METRIC_ID))
+            StepVerifier.create(client.listFeedback(METRIC_ID))
                 .thenConsumeWhile(actualMetricFeedbackList::add)
                 .verifyComplete();
 
@@ -107,12 +107,11 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         client = getMetricsAdvisorBuilder(httpClient, serviceVersion).buildAsyncClient();
 
         // Act & Assert
-        StepVerifier.create(client.listMetricFeedbacks(METRIC_ID, new ListMetricFeedbackOptions().setTop(3)).byPage())
+        StepVerifier.create(client.listFeedback(METRIC_ID, new ListMetricFeedbackOptions().setTop(3)).byPage())
             .thenConsumeWhile(metricFeedbackPagedResponse -> 3 >= metricFeedbackPagedResponse.getValue().size())
             // page size should be less than or equal to 3
             .verifyComplete();
     }
-
 
     // /**
     //  * Verifies the result of the list metric feedback  method using skip options.
@@ -126,19 +125,18 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
     //     final ArrayList<MetricFeedback> actualMetricFeedbackList = new ArrayList<>();
     //     final ArrayList<MetricFeedback> expectedList = new ArrayList<>();
     //
-    //     StepVerifier.create(client.listMetricFeedbacks())
+    //     StepVerifier.create(client.listFeedback())
     //         .thenConsumeWhile(expectedList::add)
     //         .verifyComplete();
     //
     //     // Act & Assert
-    //     StepVerifier.create(client.listMetricFeedbacks(new ListMetricFeedbackOptions().setSkip(3)))
+    //     StepVerifier.create(client.listFeedback(new ListMetricFeedbackOptions().setSkip(3)))
     //         .thenConsumeWhile(actualMetricFeedbackList::add)
     //         .verifyComplete();
     //
     //     assertEquals(expectedList.size() - 3, actualMetricFeedbackList.size());
     // }
 
-    // TODO (savaity): Currently, the service returns a result that satisfies either of the seriesKey not both.
     /**
      * Verifies the result of the list metric feedback  method to filter results using
      * {@link ListMetricFeedbackFilter#setDimensionFilter(DimensionKey)}.
@@ -148,14 +146,18 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
     void testListMetricFeedbackFilterByDimensionFilter(HttpClient httpClient, MetricsAdvisorServiceVersion serviceVersion) {
         // Arrange
         client = getMetricsAdvisorBuilder(httpClient, serviceVersion).buildAsyncClient();
+        creatMetricFeedbackRunner(inputMetricFeedback -> {
+            client.addFeeddback(METRIC_ID, inputMetricFeedback).block();
 
-        // Act & Assert
-        StepVerifier.create(client.listMetricFeedbacks(METRIC_ID,
-            new ListMetricFeedbackOptions().setFilter(new ListMetricFeedbackFilter()
-                .setDimensionFilter(new DimensionKey(DIMENSION_FILTER))).setTop(10)))
-            .thenConsumeWhile(metricFeedback ->
-                metricFeedback.getDimensionFilter().asMap().keySet().stream().anyMatch(DIMENSION_FILTER::containsKey))
-            .verifyComplete();
+            // Act & Assert
+            StepVerifier.create(client.listFeedback(METRIC_ID,
+                new ListMetricFeedbackOptions().setFilter(new ListMetricFeedbackFilter()
+                    .setDimensionFilter(new DimensionKey(DIMENSION_FILTER))).setTop(10)))
+                .thenConsumeWhile(metricFeedback ->
+                    metricFeedback.getDimensionFilter().asMap().keySet().stream().anyMatch(DIMENSION_FILTER::containsKey))
+                .verifyComplete();
+        }, ANOMALY);
+
     }
 
     /**
@@ -169,7 +171,7 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         client = getMetricsAdvisorBuilder(httpClient, serviceVersion).buildAsyncClient();
 
         // Act & Assert
-        StepVerifier.create(client.listMetricFeedbacks(METRIC_ID,
+        StepVerifier.create(client.listFeedback(METRIC_ID,
             new ListMetricFeedbackOptions().setFilter(new ListMetricFeedbackFilter()
                 .setFeedbackType(ANOMALY))))
             .thenConsumeWhile(metricFeedback  -> ANOMALY.equals(metricFeedback.getFeedbackType()))
@@ -186,16 +188,16 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         // Arrange
         client = getMetricsAdvisorBuilder(httpClient, serviceVersion).buildAsyncClient();
         creatMetricFeedbackRunner(inputMetricFeedback -> {
-            final MetricFeedback createdMetricFeedback = client.createMetricFeedback(METRIC_ID, inputMetricFeedback).block();
+            final MetricFeedback createdMetricFeedback = client.addFeeddback(METRIC_ID, inputMetricFeedback).block();
 
             // Act & Assert
-            StepVerifier.create(client.listMetricFeedbacks(METRIC_ID,
+            StepVerifier.create(client.listFeedback(METRIC_ID,
                 new ListMetricFeedbackOptions().setFilter(new ListMetricFeedbackFilter()
                     .setStartTime(createdMetricFeedback.getCreatedTime())
                     .setTimeMode(FeedbackQueryTimeMode.FEEDBACK_CREATED_TIME))))
-                .assertNext(metricFeedback ->
-                    assertTrue(metricFeedback.getCreatedTime().isAfter(createdMetricFeedback.getCreatedTime())
-                        || metricFeedback.getCreatedTime().isEqual(createdMetricFeedback.getCreatedTime())))
+                .thenConsumeWhile(metricFeedback ->
+                    metricFeedback.getCreatedTime().isAfter(createdMetricFeedback.getCreatedTime())
+                        || metricFeedback.getCreatedTime().isEqual(createdMetricFeedback.getCreatedTime()))
                 .verifyComplete();
 
         }, ANOMALY);
@@ -213,7 +215,7 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         client = getMetricsAdvisorBuilder(httpClient, serviceVersion).buildAsyncClient();
 
         // Act & Assert
-        StepVerifier.create(client.getMetricFeedback(null))
+        StepVerifier.create(client.getFeedback(null))
             .expectErrorMatches(throwable -> throwable instanceof NullPointerException
                 && throwable.getMessage().equals("'feedbackId' is required."))
             .verify();
@@ -229,7 +231,7 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         client = getMetricsAdvisorBuilder(httpClient, serviceVersion).buildAsyncClient();
 
         // Act & Assert
-        StepVerifier.create(client.getMetricFeedback(INCORRECT_UUID))
+        StepVerifier.create(client.getFeedback(INCORRECT_UUID))
             .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException
                 && throwable.getMessage().equals(INCORRECT_UUID_ERROR))
             .verify();
@@ -243,14 +245,18 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
     public void getMetricFeedbackValidId(HttpClient httpClient, MetricsAdvisorServiceVersion serviceVersion) {
         // Arrange
         client = getMetricsAdvisorBuilder(httpClient, serviceVersion).buildAsyncClient();
-
-        // Act & Assert
-        StepVerifier.create(client.getMetricFeedbackWithResponse(COMMENT_FEEDBACK_ID))
-            .assertNext(metricFeedbackResponse -> {
-                assertEquals(metricFeedbackResponse.getStatusCode(), HttpResponseStatus.OK.code());
-                validateMetricFeedbackResult(getCommentFeedback(), metricFeedbackResponse.getValue(), COMMENT);
-            })
-            .verifyComplete();
+        creatMetricFeedbackRunner(expectedMetricFeedback -> {
+            // Act & Assert
+            MetricFeedback createdMetricFeedback
+                = client.addFeeddback(METRIC_ID, expectedMetricFeedback).block();
+            // Act & Assert
+            StepVerifier.create(client.getFeedbackWithResponse(createdMetricFeedback.getId()))
+                .assertNext(metricFeedbackResponse -> {
+                    assertEquals(metricFeedbackResponse.getStatusCode(), HttpResponseStatus.OK.code());
+                    validateMetricFeedbackResult(getCommentFeedback(), metricFeedbackResponse.getValue(), COMMENT);
+                })
+                .verifyComplete();
+        }, COMMENT);
     }
 
     // Create metric feedback
@@ -266,7 +272,7 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         creatMetricFeedbackRunner(expectedMetricFeedback ->
 
             // Act & Assert
-            StepVerifier.create(client.createMetricFeedback(METRIC_ID, expectedMetricFeedback))
+            StepVerifier.create(client.addFeeddback(METRIC_ID, expectedMetricFeedback))
                 .assertNext(createdMetricFeedback ->
                     validateMetricFeedbackResult(expectedMetricFeedback, createdMetricFeedback, COMMENT))
                 .verifyComplete(), COMMENT);
@@ -283,10 +289,9 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         creatMetricFeedbackRunner(expectedMetricFeedback ->
 
             // Act & Assert
-            StepVerifier.create(client.createMetricFeedback(METRIC_ID, expectedMetricFeedback))
-                .assertNext(createdMetricFeedback -> {
-                    validateMetricFeedbackResult(expectedMetricFeedback, createdMetricFeedback, ANOMALY);
-                })
+            StepVerifier.create(client.addFeeddback(METRIC_ID, expectedMetricFeedback))
+                .assertNext(createdMetricFeedback ->
+                    validateMetricFeedbackResult(expectedMetricFeedback, createdMetricFeedback, ANOMALY))
                 .verifyComplete(), ANOMALY);
     }
 
@@ -301,7 +306,7 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         creatMetricFeedbackRunner(expectedMetricFeedback ->
 
             // Act & Assert
-            StepVerifier.create(client.createMetricFeedback(METRIC_ID, expectedMetricFeedback))
+            StepVerifier.create(client.addFeeddback(METRIC_ID, expectedMetricFeedback))
                 .assertNext(createdMetricFeedback ->
                     validateMetricFeedbackResult(expectedMetricFeedback, createdMetricFeedback, PERIOD))
                 .verifyComplete(), PERIOD);
@@ -317,10 +322,8 @@ public class FeedbackAsyncTest extends FeedbackTestBase {
         client = getMetricsAdvisorBuilder(httpClient, serviceVersion).buildAsyncClient();
         creatMetricFeedbackRunner(expectedMetricFeedback ->
             // Act & Assert
-            StepVerifier.create(client.createMetricFeedback(METRIC_ID, expectedMetricFeedback))
-                .assertNext(createdMetricFeedback -> {
-                    validateMetricFeedbackResult(expectedMetricFeedback, createdMetricFeedback, CHANGE_POINT);
-                })
+            StepVerifier.create(client.addFeeddback(METRIC_ID, expectedMetricFeedback))
+                .assertNext(createdMetricFeedback -> validateMetricFeedbackResult(expectedMetricFeedback, createdMetricFeedback, CHANGE_POINT))
                 .verifyComplete(), CHANGE_POINT);
     }
 }

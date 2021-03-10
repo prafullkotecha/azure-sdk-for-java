@@ -3,16 +3,27 @@
 
 package com.azure.search.documents;
 
+import com.azure.core.annotation.ServiceClient;
 import com.azure.core.util.Context;
 import com.azure.core.util.logging.ClientLogger;
+import com.azure.core.util.serializer.JsonSerializer;
+import com.azure.search.documents.implementation.SearchIndexClientImpl;
+import com.azure.search.documents.implementation.batching.SearchIndexingPublisher;
 import com.azure.search.documents.models.IndexAction;
 import com.azure.search.documents.models.IndexActionType;
+import com.azure.search.documents.options.OnActionAddedOptions;
+import com.azure.search.documents.options.OnActionErrorOptions;
+import com.azure.search.documents.options.OnActionSentOptions;
+import com.azure.search.documents.options.OnActionSucceededOptions;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.azure.core.util.FluxUtil.withContext;
@@ -21,24 +32,35 @@ import static com.azure.core.util.FluxUtil.withContext;
  * This class provides a buffered sender that contains operations for conveniently indexing documents to an Azure Search
  * index.
  */
+@ServiceClient(builder = SearchClientBuilder.class, isAsync = true)
 public final class SearchIndexingBufferedAsyncSender<T> {
     private final ClientLogger logger = new ClientLogger(SearchIndexingBufferedAsyncSender.class);
 
-    private final SearchIndexingPublisher<T> publisher;
     private final boolean autoFlush;
     private final long flushWindowMillis;
+
+    final SearchIndexingPublisher<T> publisher;
 
     private Timer autoFlushTimer;
     private final AtomicReference<TimerTask> flushTask = new AtomicReference<>();
 
     private volatile boolean isClosed = false;
 
-    SearchIndexingBufferedAsyncSender(SearchAsyncClient client, SearchIndexingBufferedSenderOptions<T> options) {
-        this.publisher = new SearchIndexingPublisher<>(client, options);
+    SearchIndexingBufferedAsyncSender(SearchIndexClientImpl restClient, JsonSerializer serializer,
+        Function<T, String> documentKeyRetriever, boolean autoFlush, Duration autoFlushInterval,
+        int initialBatchActionCount, int maxRetriesPerAction, Duration throttlingDelay, Duration maxThrottlingDelay,
+        Consumer<OnActionAddedOptions<T>> onActionAddedConsumer,
+        Consumer<OnActionSucceededOptions<T>> onActionSucceededConsumer,
+        Consumer<OnActionErrorOptions<T>> onActionErrorConsumer,
+        Consumer<OnActionSentOptions<T>> onActionSentConsumer) {
+        this.publisher = new SearchIndexingPublisher<>(restClient, serializer, documentKeyRetriever, autoFlush,
+            initialBatchActionCount, maxRetriesPerAction, throttlingDelay, maxThrottlingDelay, onActionAddedConsumer,
+            onActionSucceededConsumer, onActionErrorConsumer, onActionSentConsumer);
 
-        this.autoFlush = options.getAutoFlush();
-        this.flushWindowMillis = Math.max(0, options.getAutoFlushWindow().toMillis());
+        this.autoFlush = autoFlush;
+        this.flushWindowMillis = Math.max(0, autoFlushInterval.toMillis());
         this.autoFlushTimer = (this.autoFlush && this.flushWindowMillis > 0) ? new Timer() : null;
+
     }
 
     /**
@@ -46,17 +68,19 @@ public final class SearchIndexingBufferedAsyncSender<T> {
      *
      * @return The {@link IndexAction IndexActions} in the batch that are ready to be indexed.
      */
-    public Collection<IndexAction<?>> getActions() {
+    public Collection<IndexAction<T>> getActions() {
         return publisher.getActions();
     }
 
     /**
-     * Gets the batch size.
+     * Gets the number of documents required in a batch for it to be flushed.
+     * <p>
+     * This configuration is only taken into account if auto flushing is enabled.
      *
-     * @return The batch size.
+     * @return The number of documents required before a flush is triggered.
      */
-    int getBatchSize() {
-        return publisher.getBatchSize();
+    int getBatchActionCount() {
+        return publisher.getBatchActionCount();
     }
 
     /**
@@ -147,7 +171,7 @@ public final class SearchIndexingBufferedAsyncSender<T> {
         ensureOpen();
 
         rescheduleFlushTask();
-        return publisher.flush(context, false);
+        return publisher.flush(false, false, context);
     }
 
     private void rescheduleFlushTask() {
@@ -158,7 +182,7 @@ public final class SearchIndexingBufferedAsyncSender<T> {
         TimerTask newTask = new TimerTask() {
             @Override
             public void run() {
-                Mono.defer(() -> publisher.flush(Context.NONE, false)).subscribe();
+                Mono.defer(() -> publisher.flush(false, false, Context.NONE)).subscribe();
             }
         };
 
@@ -199,7 +223,7 @@ public final class SearchIndexingBufferedAsyncSender<T> {
                         autoFlushTimer = null;
                     }
 
-                    return publisher.flush(context, true);
+                    return publisher.flush(true, true, context);
                 }
 
                 return Mono.empty();

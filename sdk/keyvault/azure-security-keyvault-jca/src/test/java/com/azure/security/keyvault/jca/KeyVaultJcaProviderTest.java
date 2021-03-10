@@ -13,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * The JUnit tests for the KeyVaultProvider class.
- *
- * @author Manfred Riem (manfred.riem@microsoft.com)
  */
 public class KeyVaultJcaProviderTest {
 
@@ -38,9 +36,10 @@ public class KeyVaultJcaProviderTest {
         KeyStore keystore = KeyStore.getInstance("AzureKeyVault");
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            System.getProperty("azure.keyvault.aad-authentication-url"),
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         keystore.load(parameter);
         assertNull(keystore.getCertificate("myalias"));
     }

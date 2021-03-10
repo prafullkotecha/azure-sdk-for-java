@@ -8,6 +8,7 @@ import com.azure.core.annotation.BodyParam;
 import com.azure.core.annotation.Delete;
 import com.azure.core.annotation.ExpectedResponses;
 import com.azure.core.annotation.Get;
+import com.azure.core.annotation.HeaderParam;
 import com.azure.core.annotation.Headers;
 import com.azure.core.annotation.Host;
 import com.azure.core.annotation.HostParam;
@@ -80,7 +81,7 @@ public final class ProfilesClientImpl
     @Host("{$host}")
     @ServiceInterface(name = "CdnManagementClientP")
     private interface ProfilesService {
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Get("/subscriptions/{subscriptionId}/providers/Microsoft.Cdn/profiles")
         @ExpectedResponses({200})
         @UnexpectedResponseExceptionType(ManagementException.class)
@@ -88,9 +89,10 @@ public final class ProfilesClientImpl
             @HostParam("$host") String endpoint,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Get("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles")
         @ExpectedResponses({200})
         @UnexpectedResponseExceptionType(ManagementException.class)
@@ -99,9 +101,10 @@ public final class ProfilesClientImpl
             @PathParam("resourceGroupName") String resourceGroupName,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Get(
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles"
                 + "/{profileName}")
@@ -113,9 +116,10 @@ public final class ProfilesClientImpl
             @PathParam("profileName") String profileName,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Put(
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles"
                 + "/{profileName}")
@@ -128,9 +132,10 @@ public final class ProfilesClientImpl
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
             @BodyParam("application/json") ProfileInner profile,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Patch(
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles"
                 + "/{profileName}")
@@ -143,9 +148,10 @@ public final class ProfilesClientImpl
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
             @BodyParam("application/json") ProfileUpdateParameters profileUpdateParameters,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json;q=0.9", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Delete(
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles"
                 + "/{profileName}")
@@ -157,9 +163,10 @@ public final class ProfilesClientImpl
             @PathParam("profileName") String profileName,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Post(
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles"
                 + "/{profileName}/generateSsoUri")
@@ -171,9 +178,10 @@ public final class ProfilesClientImpl
             @PathParam("profileName") String profileName,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Post(
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles"
                 + "/{profileName}/getSupportedOptimizationTypes")
@@ -185,9 +193,10 @@ public final class ProfilesClientImpl
             @PathParam("profileName") String profileName,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Post(
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles"
                 + "/{profileName}/checkResourceUsage")
@@ -199,28 +208,38 @@ public final class ProfilesClientImpl
             @PathParam("profileName") String profileName,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("api-version") String apiVersion,
+            @HeaderParam("Accept") String accept,
             Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Get("{nextLink}")
         @ExpectedResponses({200})
         @UnexpectedResponseExceptionType(ManagementException.class)
         Mono<Response<ProfileListResult>> listNext(
-            @PathParam(value = "nextLink", encoded = true) String nextLink, Context context);
+            @PathParam(value = "nextLink", encoded = true) String nextLink,
+            @HostParam("$host") String endpoint,
+            @HeaderParam("Accept") String accept,
+            Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Get("{nextLink}")
         @ExpectedResponses({200})
         @UnexpectedResponseExceptionType(ManagementException.class)
         Mono<Response<ProfileListResult>> listByResourceGroupNext(
-            @PathParam(value = "nextLink", encoded = true) String nextLink, Context context);
+            @PathParam(value = "nextLink", encoded = true) String nextLink,
+            @HostParam("$host") String endpoint,
+            @HeaderParam("Accept") String accept,
+            Context context);
 
-        @Headers({"Accept: application/json", "Content-Type: application/json"})
+        @Headers({"Content-Type: application/json"})
         @Get("{nextLink}")
         @ExpectedResponses({200})
         @UnexpectedResponseExceptionType(ManagementException.class)
         Mono<Response<ResourceUsageListResult>> listResourceUsageNext(
-            @PathParam(value = "nextLink", encoded = true) String nextLink, Context context);
+            @PathParam(value = "nextLink", encoded = true) String nextLink,
+            @HostParam("$host") String endpoint,
+            @HeaderParam("Accept") String accept,
+            Context context);
     }
 
     /**
@@ -244,6 +263,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         return FluxUtil
             .withContext(
                 context ->
@@ -252,6 +272,7 @@ public final class ProfilesClientImpl
                             this.client.getEndpoint(),
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
+                            accept,
                             context))
             .<PagedResponse<ProfileInner>>map(
                 res ->
@@ -288,9 +309,15 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
-            .list(this.client.getEndpoint(), this.client.getSubscriptionId(), this.client.getApiVersion(), context)
+            .list(
+                this.client.getEndpoint(),
+                this.client.getSubscriptionId(),
+                this.client.getApiVersion(),
+                accept,
+                context)
             .map(
                 res ->
                     new PagedResponseBase<>(
@@ -382,6 +409,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         return FluxUtil
             .withContext(
                 context ->
@@ -391,6 +419,7 @@ public final class ProfilesClientImpl
                             resourceGroupName,
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
+                            accept,
                             context))
             .<PagedResponse<ProfileInner>>map(
                 res ->
@@ -433,6 +462,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
             .listByResourceGroup(
@@ -440,6 +470,7 @@ public final class ProfilesClientImpl
                 resourceGroupName,
                 this.client.getSubscriptionId(),
                 this.client.getApiVersion(),
+                accept,
                 context)
             .map(
                 res ->
@@ -546,6 +577,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         return FluxUtil
             .withContext(
                 context ->
@@ -556,6 +588,7 @@ public final class ProfilesClientImpl
                             profileName,
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
+                            accept,
                             context))
             .subscriberContext(context -> context.putAll(FluxUtil.toReactorContext(this.client.getContext())));
     }
@@ -593,6 +626,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
             .getByResourceGroup(
@@ -601,6 +635,7 @@ public final class ProfilesClientImpl
                 profileName,
                 this.client.getSubscriptionId(),
                 this.client.getApiVersion(),
+                accept,
                 context);
     }
 
@@ -664,8 +699,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
@@ -699,6 +733,7 @@ public final class ProfilesClientImpl
         } else {
             profile.validate();
         }
+        final String accept = "application/json";
         return FluxUtil
             .withContext(
                 context ->
@@ -710,6 +745,7 @@ public final class ProfilesClientImpl
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
                             profile,
+                            accept,
                             context))
             .subscriberContext(context -> context.putAll(FluxUtil.toReactorContext(this.client.getContext())));
     }
@@ -719,8 +755,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @param context The context to associate with this operation.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
@@ -755,6 +790,7 @@ public final class ProfilesClientImpl
         } else {
             profile.validate();
         }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
             .create(
@@ -764,6 +800,7 @@ public final class ProfilesClientImpl
                 this.client.getSubscriptionId(),
                 this.client.getApiVersion(),
                 profile,
+                accept,
                 context);
     }
 
@@ -772,8 +809,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
@@ -795,8 +831,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @param context The context to associate with this operation.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
@@ -821,8 +856,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
@@ -840,8 +874,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @param context The context to associate with this operation.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
@@ -860,8 +893,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
@@ -880,8 +912,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @param context The context to associate with this operation.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
@@ -902,8 +933,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
@@ -920,8 +950,7 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @param profile CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider
-     *     and pricing tier.
+     * @param profile Profile properties needed to create a new profile.
      * @param context The context to associate with this operation.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws ManagementException thrown if the request is rejected by server.
@@ -969,6 +998,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         ProfileUpdateParameters profileUpdateParameters = new ProfileUpdateParameters();
         profileUpdateParameters.withTags(tags);
         return FluxUtil
@@ -982,6 +1012,7 @@ public final class ProfilesClientImpl
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
                             profileUpdateParameters,
+                            accept,
                             context))
             .subscriberContext(context -> context.putAll(FluxUtil.toReactorContext(this.client.getContext())));
     }
@@ -1022,6 +1053,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         ProfileUpdateParameters profileUpdateParameters = new ProfileUpdateParameters();
         profileUpdateParameters.withTags(tags);
         context = this.client.mergeContext(context);
@@ -1033,6 +1065,7 @@ public final class ProfilesClientImpl
                 this.client.getSubscriptionId(),
                 this.client.getApiVersion(),
                 profileUpdateParameters,
+                accept,
                 context);
     }
 
@@ -1149,6 +1182,26 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ManagementException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return cDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider and
+     *     pricing tier.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ProfileInner> updateAsync(String resourceGroupName, String profileName) {
+        final Map<String, String> tags = null;
+        return beginUpdateAsync(resourceGroupName, profileName, tags)
+            .last()
+            .flatMap(this.client::getLroFinalResultOrError);
+    }
+
+    /**
+     * Updates an existing CDN profile with the specified profile name under the specified subscription and resource
+     * group.
+     *
+     * @param resourceGroupName Name of the Resource group within the Azure subscription.
+     * @param profileName Name of the CDN profile which is unique within the resource group.
      * @param tags Profile tags.
      * @param context The context to associate with this operation.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
@@ -1161,26 +1214,6 @@ public final class ProfilesClientImpl
     private Mono<ProfileInner> updateAsync(
         String resourceGroupName, String profileName, Map<String, String> tags, Context context) {
         return beginUpdateAsync(resourceGroupName, profileName, tags, context)
-            .last()
-            .flatMap(this.client::getLroFinalResultOrError);
-    }
-
-    /**
-     * Updates an existing CDN profile with the specified profile name under the specified subscription and resource
-     * group.
-     *
-     * @param resourceGroupName Name of the Resource group within the Azure subscription.
-     * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @throws IllegalArgumentException thrown if parameters fail the validation.
-     * @throws ManagementException thrown if the request is rejected by server.
-     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return cDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider and
-     *     pricing tier.
-     */
-    @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<ProfileInner> updateAsync(String resourceGroupName, String profileName) {
-        final Map<String, String> tags = null;
-        return beginUpdateAsync(resourceGroupName, profileName, tags)
             .last()
             .flatMap(this.client::getLroFinalResultOrError);
     }
@@ -1209,6 +1242,24 @@ public final class ProfilesClientImpl
      *
      * @param resourceGroupName Name of the Resource group within the Azure subscription.
      * @param profileName Name of the CDN profile which is unique within the resource group.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ManagementException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return cDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider and
+     *     pricing tier.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public ProfileInner update(String resourceGroupName, String profileName) {
+        final Map<String, String> tags = null;
+        return updateAsync(resourceGroupName, profileName, tags).block();
+    }
+
+    /**
+     * Updates an existing CDN profile with the specified profile name under the specified subscription and resource
+     * group.
+     *
+     * @param resourceGroupName Name of the Resource group within the Azure subscription.
+     * @param profileName Name of the CDN profile which is unique within the resource group.
      * @param tags Profile tags.
      * @param context The context to associate with this operation.
      * @throws IllegalArgumentException thrown if parameters fail the validation.
@@ -1221,24 +1272,6 @@ public final class ProfilesClientImpl
     public ProfileInner update(
         String resourceGroupName, String profileName, Map<String, String> tags, Context context) {
         return updateAsync(resourceGroupName, profileName, tags, context).block();
-    }
-
-    /**
-     * Updates an existing CDN profile with the specified profile name under the specified subscription and resource
-     * group.
-     *
-     * @param resourceGroupName Name of the Resource group within the Azure subscription.
-     * @param profileName Name of the CDN profile which is unique within the resource group.
-     * @throws IllegalArgumentException thrown if parameters fail the validation.
-     * @throws ManagementException thrown if the request is rejected by server.
-     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return cDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider and
-     *     pricing tier.
-     */
-    @ServiceMethod(returns = ReturnType.SINGLE)
-    public ProfileInner update(String resourceGroupName, String profileName) {
-        final Map<String, String> tags = null;
-        return updateAsync(resourceGroupName, profileName, tags).block();
     }
 
     /**
@@ -1273,6 +1306,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         return FluxUtil
             .withContext(
                 context ->
@@ -1283,6 +1317,7 @@ public final class ProfilesClientImpl
                             profileName,
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
+                            accept,
                             context))
             .subscriberContext(context -> context.putAll(FluxUtil.toReactorContext(this.client.getContext())));
     }
@@ -1321,6 +1356,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
             .delete(
@@ -1329,6 +1365,7 @@ public final class ProfilesClientImpl
                 profileName,
                 this.client.getSubscriptionId(),
                 this.client.getApiVersion(),
+                accept,
                 context);
     }
 
@@ -1507,6 +1544,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         return FluxUtil
             .withContext(
                 context ->
@@ -1517,6 +1555,7 @@ public final class ProfilesClientImpl
                             profileName,
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
+                            accept,
                             context))
             .subscriberContext(context -> context.putAll(FluxUtil.toReactorContext(this.client.getContext())));
     }
@@ -1557,6 +1596,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
             .generateSsoUri(
@@ -1565,6 +1605,7 @@ public final class ProfilesClientImpl
                 profileName,
                 this.client.getSubscriptionId(),
                 this.client.getApiVersion(),
+                accept,
                 context);
     }
 
@@ -1665,6 +1706,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         return FluxUtil
             .withContext(
                 context ->
@@ -1675,6 +1717,7 @@ public final class ProfilesClientImpl
                             profileName,
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
+                            accept,
                             context))
             .subscriberContext(context -> context.putAll(FluxUtil.toReactorContext(this.client.getContext())));
     }
@@ -1713,6 +1756,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
             .listSupportedOptimizationTypes(
@@ -1721,6 +1765,7 @@ public final class ProfilesClientImpl
                 profileName,
                 this.client.getSubscriptionId(),
                 this.client.getApiVersion(),
+                accept,
                 context);
     }
 
@@ -1816,6 +1861,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         return FluxUtil
             .withContext(
                 context ->
@@ -1826,6 +1872,7 @@ public final class ProfilesClientImpl
                             profileName,
                             this.client.getSubscriptionId(),
                             this.client.getApiVersion(),
+                            accept,
                             context))
             .<PagedResponse<ResourceUsageInner>>map(
                 res ->
@@ -1872,6 +1919,7 @@ public final class ProfilesClientImpl
                     new IllegalArgumentException(
                         "Parameter this.client.getSubscriptionId() is required and cannot be null."));
         }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
             .listResourceUsage(
@@ -1880,6 +1928,7 @@ public final class ProfilesClientImpl
                 profileName,
                 this.client.getSubscriptionId(),
                 this.client.getApiVersion(),
+                accept,
                 context)
             .map(
                 res ->
@@ -1974,8 +2023,15 @@ public final class ProfilesClientImpl
         if (nextLink == null) {
             return Mono.error(new IllegalArgumentException("Parameter nextLink is required and cannot be null."));
         }
+        if (this.client.getEndpoint() == null) {
+            return Mono
+                .error(
+                    new IllegalArgumentException(
+                        "Parameter this.client.getEndpoint() is required and cannot be null."));
+        }
+        final String accept = "application/json";
         return FluxUtil
-            .withContext(context -> service.listNext(nextLink, context))
+            .withContext(context -> service.listNext(nextLink, this.client.getEndpoint(), accept, context))
             .<PagedResponse<ProfileInner>>map(
                 res ->
                     new PagedResponseBase<>(
@@ -2003,9 +2059,16 @@ public final class ProfilesClientImpl
         if (nextLink == null) {
             return Mono.error(new IllegalArgumentException("Parameter nextLink is required and cannot be null."));
         }
+        if (this.client.getEndpoint() == null) {
+            return Mono
+                .error(
+                    new IllegalArgumentException(
+                        "Parameter this.client.getEndpoint() is required and cannot be null."));
+        }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
-            .listNext(nextLink, context)
+            .listNext(nextLink, this.client.getEndpoint(), accept, context)
             .map(
                 res ->
                     new PagedResponseBase<>(
@@ -2031,8 +2094,16 @@ public final class ProfilesClientImpl
         if (nextLink == null) {
             return Mono.error(new IllegalArgumentException("Parameter nextLink is required and cannot be null."));
         }
+        if (this.client.getEndpoint() == null) {
+            return Mono
+                .error(
+                    new IllegalArgumentException(
+                        "Parameter this.client.getEndpoint() is required and cannot be null."));
+        }
+        final String accept = "application/json";
         return FluxUtil
-            .withContext(context -> service.listByResourceGroupNext(nextLink, context))
+            .withContext(
+                context -> service.listByResourceGroupNext(nextLink, this.client.getEndpoint(), accept, context))
             .<PagedResponse<ProfileInner>>map(
                 res ->
                     new PagedResponseBase<>(
@@ -2060,9 +2131,16 @@ public final class ProfilesClientImpl
         if (nextLink == null) {
             return Mono.error(new IllegalArgumentException("Parameter nextLink is required and cannot be null."));
         }
+        if (this.client.getEndpoint() == null) {
+            return Mono
+                .error(
+                    new IllegalArgumentException(
+                        "Parameter this.client.getEndpoint() is required and cannot be null."));
+        }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
-            .listByResourceGroupNext(nextLink, context)
+            .listByResourceGroupNext(nextLink, this.client.getEndpoint(), accept, context)
             .map(
                 res ->
                     new PagedResponseBase<>(
@@ -2088,8 +2166,15 @@ public final class ProfilesClientImpl
         if (nextLink == null) {
             return Mono.error(new IllegalArgumentException("Parameter nextLink is required and cannot be null."));
         }
+        if (this.client.getEndpoint() == null) {
+            return Mono
+                .error(
+                    new IllegalArgumentException(
+                        "Parameter this.client.getEndpoint() is required and cannot be null."));
+        }
+        final String accept = "application/json";
         return FluxUtil
-            .withContext(context -> service.listResourceUsageNext(nextLink, context))
+            .withContext(context -> service.listResourceUsageNext(nextLink, this.client.getEndpoint(), accept, context))
             .<PagedResponse<ResourceUsageInner>>map(
                 res ->
                     new PagedResponseBase<>(
@@ -2118,9 +2203,16 @@ public final class ProfilesClientImpl
         if (nextLink == null) {
             return Mono.error(new IllegalArgumentException("Parameter nextLink is required and cannot be null."));
         }
+        if (this.client.getEndpoint() == null) {
+            return Mono
+                .error(
+                    new IllegalArgumentException(
+                        "Parameter this.client.getEndpoint() is required and cannot be null."));
+        }
+        final String accept = "application/json";
         context = this.client.mergeContext(context);
         return service
-            .listResourceUsageNext(nextLink, context)
+            .listResourceUsageNext(nextLink, this.client.getEndpoint(), accept, context)
             .map(
                 res ->
                     new PagedResponseBase<>(

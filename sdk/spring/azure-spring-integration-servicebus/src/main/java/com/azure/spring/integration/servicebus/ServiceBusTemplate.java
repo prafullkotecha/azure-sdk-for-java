@@ -27,7 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * Azure service bus template to support send {@link Message} asynchronously
+ * Azure Service Bus template to support send {@link Message} asynchronously.
  *
  * @author Warren Zhu
  * @author Eduardo Sciullo
@@ -42,10 +42,11 @@ public class ServiceBusTemplate<T extends ServiceBusSenderFactory> implements Se
     protected CheckpointConfig checkpointConfig = CheckpointConfig.builder()
         .checkpointMode(CheckpointMode.RECORD).build();
 
-    protected ServiceBusMessageConverter messageConverter = new ServiceBusMessageConverter();
+    protected ServiceBusMessageConverter messageConverter;
 
-    public ServiceBusTemplate(@NonNull T senderFactory) {
+    public ServiceBusTemplate(@NonNull T senderFactory, @NonNull ServiceBusMessageConverter messageConverter) {
         this.senderFactory = senderFactory;
+        this.messageConverter = messageConverter;
         LOG.info("Started ServiceBusTemplate with properties: {}", checkpointConfig);
     }
 

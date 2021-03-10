@@ -26,21 +26,40 @@ import java.util.Map;
  */
 public abstract class AbstractAzureMessageConverter<T> implements AzureMessageConverter<T> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractAzureMessageConverter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAzureMessageConverter.class);
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    protected static byte[] toPayload(Object object) {
+    protected ObjectMapper getObjectMapper() {
+        return OBJECT_MAPPER;
+    }
+
+    /**
+     * Convert payload object to byte array.
+     * @param object The payload object.
+     * @return The byte array.
+     * @throws ConversionException When fail to convert the object to bytes.
+     */
+    protected byte[] toPayload(Object object) {
         try {
-            return OBJECT_MAPPER.writeValueAsBytes(object);
+            return getObjectMapper().writeValueAsBytes(object);
         } catch (JsonProcessingException e) {
             throw new ConversionException("Failed to write JSON: " + object, e);
         }
     }
 
-    private static <U> U fromPayload(byte[] payload, Class<U> payloadType) {
+    /**
+     * Convert payload from byte array to object.
+     *
+     * @param payload The payload byte array.
+     * @param payloadType The target type of payload.
+     * @param <U> The type class.
+     * @return The converted object.
+     * @throws ConversionException When fail to convert to object from byte array.
+     */
+    private <U> U fromPayload(byte[] payload, Class<U> payloadType) {
         try {
-            return OBJECT_MAPPER.readerFor(payloadType).readValue(payload);
+            return getObjectMapper().readerFor(payloadType).readValue(payload);
         } catch (IOException e) {
             throw new ConversionException("Failed to read JSON: " + Arrays.toString(payload), e);
         }
@@ -120,10 +139,11 @@ public abstract class AbstractAzureMessageConverter<T> implements AzureMessageCo
      * @param targetType target class to convert
      * @param <M> Target class type
      * @return Return the corresponding class instance
+     * @throws ConversionException When fail to convert.
      */
     protected <M> M readValue(String value, Class<M> targetType) {
         try {
-            return OBJECT_MAPPER.readValue(value, targetType);
+            return getObjectMapper().readValue(value, targetType);
         } catch (IOException e) {
             throw new ConversionException("Failed to read JSON: " + value, e);
         }
@@ -137,10 +157,10 @@ public abstract class AbstractAzureMessageConverter<T> implements AzureMessageCo
     protected boolean isValidJson(Object value) {
         try {
             if (value instanceof String) {
-                OBJECT_MAPPER.readTree((String) value);
+                getObjectMapper().readTree((String) value);
                 return true;
             }
-            LOG.warn("Not a valid json string: " + value);
+            LOGGER.warn("Not a valid json string: " + value);
             return false;
         } catch (IOException e) {
             return false;
@@ -151,10 +171,11 @@ public abstract class AbstractAzureMessageConverter<T> implements AzureMessageCo
      * Convert the object to json string
      * @param value object to be converted
      * @return json string
+     * @throws ConversionException When fail to convert.
      */
     protected String toJson(Object value) {
         try {
-            return OBJECT_MAPPER.writeValueAsString(value);
+            return getObjectMapper().writeValueAsString(value);
         } catch (IOException e) {
             throw new ConversionException("Failed to convert to JSON: " + value.toString(), e);
         }

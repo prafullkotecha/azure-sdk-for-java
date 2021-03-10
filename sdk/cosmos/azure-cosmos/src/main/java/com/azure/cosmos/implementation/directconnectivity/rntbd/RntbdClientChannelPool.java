@@ -121,18 +121,18 @@ public final class RntbdClientChannelPool implements ChannelPool {
         new ClosedChannelException(), RntbdClientChannelPool.class, "acquire");
 
     private static final IllegalStateException POOL_CLOSED_ON_ACQUIRE = ThrowableUtil.unknownStackTrace(
-        new StacklessIllegalStateException("service endpoint was closed while acquiring a channel"),
+        new ChannelAcquisitionException("service endpoint was closed while acquiring a channel"),
         RntbdClientChannelPool.class, "acquire");
 
     private static final IllegalStateException POOL_CLOSED_ON_RELEASE = ThrowableUtil.unknownStackTrace(
-        new StacklessIllegalStateException("service endpoint was closed while releasing a channel"),
+        new ChannelAcquisitionException("service endpoint was closed while releasing a channel"),
         RntbdClientChannelPool.class, "release");
 
     private static final AttributeKey<RntbdClientChannelPool> POOL_KEY = AttributeKey.newInstance(
         RntbdClientChannelPool.class.getName());
 
     private static final IllegalStateException TOO_MANY_PENDING_ACQUISITIONS = ThrowableUtil.unknownStackTrace(
-        new StacklessIllegalStateException("too many outstanding acquire operations"),
+        new ChannelAcquisitionException("too many outstanding acquire operations"),
         RntbdClientChannelPool.class, "acquire");
 
     private static final EventExecutor closer = new DefaultEventExecutor(new RntbdThreadFactory(
@@ -217,7 +217,7 @@ public final class RntbdClientChannelPool implements ChannelPool {
         });
 
         // TODO (DANOBLE) Consider moving or removing this.allocatorMetric
-        //  This metric is redundant in the scope of this class and should be pulled up to RntbdServiceEndpoint or
+        //  The metric is redundant in the scope of this class and should be pulled up to RntbdServiceEndpoint or
         //  entirely removed.
 
         this.acquisitionTimeoutInNanos = config.connectionAcquisitionTimeoutInNanos();
@@ -1164,7 +1164,7 @@ public final class RntbdClientChannelPool implements ChannelPool {
     private Channel pollChannel() {
         ensureInEventLoop();
 
-        final Channel first = this.availableChannels.pollLast();
+        final Channel first = this.availableChannels.pollFirst();
 
         if (first == null) {
             return null;  // because there are no available channels
@@ -1182,7 +1182,7 @@ public final class RntbdClientChannelPool implements ChannelPool {
 
         this.availableChannels.offer(first);  // because we need a non-null sentinel to stop the search for a channel
 
-        for (Channel next = this.availableChannels.pollLast(); next != first; next = this.availableChannels.pollLast()) {
+        for (Channel next = this.availableChannels.pollFirst(); next != first; next = this.availableChannels.pollFirst()) {
             assert next != null : "impossible";
 
             if (next.isActive()) {
@@ -1234,7 +1234,7 @@ public final class RntbdClientChannelPool implements ChannelPool {
                 this.poolHandler.channelReleased(channel);
                 promise.setSuccess(null);
             } else {
-                final IllegalStateException error = new StacklessIllegalStateException(lenientFormat(
+                final IllegalStateException error = new ChannelAcquisitionException(lenientFormat(
                     "cannot offer channel back to pool because the pool is at capacity (%s)\n  %s\n  %s",
                     this.maxChannels,
                     this,
@@ -1569,11 +1569,11 @@ public final class RntbdClientChannelPool implements ChannelPool {
         }
     }
 
-    private static class StacklessIllegalStateException extends IllegalStateException {
+    private static class ChannelAcquisitionException extends IllegalStateException {
 
         private static final long serialVersionUID = -6011782222645074949L;
 
-        public StacklessIllegalStateException(String message) {
+        public ChannelAcquisitionException(String message) {
             super(message);
         }
 

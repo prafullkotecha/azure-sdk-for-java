@@ -1,7 +1,7 @@
 trigger: none
 
-jobs:
-  - template: ../../eng/pipelines/templates/jobs/archetype-sdk-tests.yml
+stages:
+  - template: /eng/pipelines/templates/stages/archetype-sdk-tests.yml
     parameters:
       ServiceDirectory: core
       Artifacts:
@@ -11,6 +11,9 @@ jobs:
         - name: azure-core-amqp
           groupId: com.azure
           safeName: azurecoreamqp
+        - name: azure-core-amqp-experimental
+          groupId: com.azure
+          safeName: azurecoreamqpexperimental
         - name: azure-core-experimental
           groupId: com.azure
           safeName: azurecoreexperimental

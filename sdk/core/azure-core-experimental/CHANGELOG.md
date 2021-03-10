@@ -1,7 +1,48 @@
 # Release History
 
+## 1.0.0-beta.12 (Unreleased)
+
+
+## 1.0.0-beta.11 (2021-03-08)
+
+### New Features
+
+- Added `ARMChallengeAuthenticationPolicy` as an implementation of `BearerTokenAuthenticationChallengePolicy`.
+
+### Breaking Changes
+
+- Modified implementations of `onBeforeRequest` and `onChallenge` in `BearerTokenAuthenticationChallengePolicy`.
+
+### Dependency Updates
+
+- Upgraded `azure-core` from `1.13.0` to `1.14.0`.
+
+## 1.0.0-beta.10 (2021-02-05)
+
+### New Features
+
+- Added challenge based authentication support via `BearerTokenAuthenticationChallengePolicy` and `AccessTokenCache` classes.
+
+## 1.0.0-beta.9 (2021-01-11)
+
+### Breaking Changes
+
+- Moved `BinaryData` to `azure-core`.
+
+## 1.0.0-beta.8 (2020-10-29)
+
+### New Features
+
+- Added `Object` based APIs to `BinaryData` that use a default `JsonSerializer`.
+
+### Breaking Changes
+
+- Moved `JsonPatchDocument` into `azure-core`.
+- Removed `BinaryData.fromString(String, Charset)`.
+
 ## 1.0.0-beta.7 (2020-10-08)
 
+- Added API `fromObject()` in `BinaryData` which uses `JsonSerializer` present in the classpath.
 - Added APIs to `JsonPatchDocument` which accept pre-serialized JSON.
 - Updated `azure-core` dependency to released version. 
 

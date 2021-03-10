@@ -27,6 +27,7 @@ import com.azure.cosmos.implementation.RequestVerb;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.RxDocumentServiceRequest;
 import com.azure.cosmos.implementation.RxDocumentServiceResponse;
+import com.azure.cosmos.implementation.UnauthorizedException;
 import com.azure.cosmos.implementation.UserAgentContainer;
 import com.azure.cosmos.implementation.Utils;
 import com.azure.cosmos.implementation.apachecommons.lang.StringUtils;
@@ -55,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -84,6 +86,9 @@ public class GatewayAddressCache implements IAddressCache {
     private volatile Pair<PartitionKeyRangeIdentity, AddressInformation[]> masterPartitionAddressCache;
     private volatile Instant suboptimalMasterPartitionTimestamp;
 
+    private final ConcurrentHashMap<URI, Set<PartitionKeyRangeIdentity>> serverPartitionAddressToPkRangeIdMap;
+    private final boolean tcpConnectionEndpointRediscoveryEnabled;
+
     public GatewayAddressCache(
             DiagnosticsClientContext clientContext,
             URI serviceEndpoint,
@@ -91,7 +96,8 @@ public class GatewayAddressCache implements IAddressCache {
             IAuthorizationTokenProvider tokenProvider,
             UserAgentContainer userAgent,
             HttpClient httpClient,
-            long suboptimalPartitionForceRefreshIntervalInSeconds) {
+            long suboptimalPartitionForceRefreshIntervalInSeconds,
+            boolean tcpConnectionEndpointRediscoveryEnabled) {
         this.clientContext = clientContext;
         try {
             this.addressEndpoint = new URL(serviceEndpoint.toURL(), Paths.ADDRESS_PATH_SEGMENT).toURI();
@@ -124,6 +130,9 @@ public class GatewayAddressCache implements IAddressCache {
 
         // Set requested API version header for version enforcement.
         defaultRequestHeaders.put(HttpConstants.HttpHeaders.VERSION, HttpConstants.Versions.CURRENT_VERSION);
+
+        this.serverPartitionAddressToPkRangeIdMap = new ConcurrentHashMap<>();
+        this.tcpConnectionEndpointRediscoveryEnabled = tcpConnectionEndpointRediscoveryEnabled;
     }
 
     public GatewayAddressCache(
@@ -132,26 +141,40 @@ public class GatewayAddressCache implements IAddressCache {
             Protocol protocol,
             IAuthorizationTokenProvider tokenProvider,
             UserAgentContainer userAgent,
-            HttpClient httpClient) {
+            HttpClient httpClient,
+            boolean tcpConnectionEndpointRediscoveryEnabled) {
         this(clientContext,
              serviceEndpoint,
              protocol,
              tokenProvider,
              userAgent,
              httpClient,
-             DefaultSuboptimalPartitionForceRefreshIntervalInSeconds);
+             DefaultSuboptimalPartitionForceRefreshIntervalInSeconds,
+             tcpConnectionEndpointRediscoveryEnabled);
     }
 
     @Override
-    public void removeAddress(final PartitionKeyRangeIdentity partitionKeyRangeIdentity) {
+    public void updateAddresses(final URI serverKey) {
 
-        Objects.requireNonNull(partitionKeyRangeIdentity, "expected non-null partitionKeyRangeIdentity");
+        Objects.requireNonNull(serverKey, "expected non-null serverKey");
 
-        if (partitionKeyRangeIdentity.getPartitionKeyRangeId().equals(PartitionKeyRange.MASTER_PARTITION_KEY_RANGE_ID)) {
-            this.masterPartitionAddressCache = null;
+        if (this.tcpConnectionEndpointRediscoveryEnabled) {
+            this.serverPartitionAddressToPkRangeIdMap.computeIfPresent(serverKey, (uri, partitionKeyRangeIdentitySet) -> {
+
+                for (PartitionKeyRangeIdentity partitionKeyRangeIdentity : partitionKeyRangeIdentitySet) {
+                    if (partitionKeyRangeIdentity.getPartitionKeyRangeId().equals(PartitionKeyRange.MASTER_PARTITION_KEY_RANGE_ID)) {
+                        this.masterPartitionAddressCache = null;
+                    } else {
+                        this.serverPartitionAddressCache.remove(partitionKeyRangeIdentity);
+                    }
+                }
+
+                return null;
+            });
         } else {
-            this.serverPartitionAddressCache.remove(partitionKeyRangeIdentity);
+            logger.warn("tcpConnectionEndpointRediscovery is not enabled, should not reach here.");
         }
+
     }
 
     @Override
@@ -289,13 +312,22 @@ public class GatewayAddressCache implements IAddressCache {
         headers.put(HttpConstants.HttpHeaders.X_DATE, Utils.nowAsRFC1123());
 
         if (tokenProvider.getAuthorizationTokenType() != AuthorizationTokenType.AadToken) {
-            String token = this.tokenProvider.getUserAuthorizationToken(
+            String token = null;
+            try {
+                token = this.tokenProvider.getUserAuthorizationToken(
                     collectionRid,
                     ResourceType.Document,
                     RequestVerb.GET,
                     headers,
                     AuthorizationTokenType.PrimaryMasterKey,
                     request.properties);
+            } catch (UnauthorizedException e) {
+                // User doesn't have rid based resource token. Maybe user has name based.
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("User doesn't have resource token for collection rid {}", collectionRid);
+                }
+            }
 
             if (token == null && request.getIsNameBased()) {
                 // User doesn't have rid based resource token. Maybe user has name based.
@@ -332,7 +364,7 @@ public class GatewayAddressCache implements IAddressCache {
                     Duration.ofSeconds(Configs.getAddressRefreshResponseTimeoutInSeconds())));
         }
 
-        Mono<RxDocumentServiceResponse> dsrObs = HttpClientUtils.parseResponseAsync(clientContext, httpResponseMono, httpRequest);
+        Mono<RxDocumentServiceResponse> dsrObs = HttpClientUtils.parseResponseAsync(request, clientContext, httpResponseMono, httpRequest);
         return dsrObs.map(
             dsr -> {
                 MetadataDiagnosticsContext metadataDiagnosticsContext =
@@ -364,7 +396,7 @@ public class GatewayAddressCache implements IAddressCache {
             if (!(exception instanceof CosmosException)) {
                 // wrap in CosmosException
                 logger.error("Network failure", exception);
-                dce = BridgeInternal.createCosmosException(0, exception);
+                dce = BridgeInternal.createCosmosException(request.requestContext.resourcePhysicalAddress, 0, exception);
                 BridgeInternal.setRequestHeaders(dce, request.getHeaders());
             } else {
                 dce = (CosmosException) exception;
@@ -566,7 +598,7 @@ public class GatewayAddressCache implements IAddressCache {
                     Duration.ofSeconds(Configs.getAddressRefreshResponseTimeoutInSeconds())));
         }
 
-        Mono<RxDocumentServiceResponse> dsrObs = HttpClientUtils.parseResponseAsync(this.clientContext, httpResponseMono, httpRequest);
+        Mono<RxDocumentServiceResponse> dsrObs = HttpClientUtils.parseResponseAsync(request, this.clientContext, httpResponseMono, httpRequest);
 
         return dsrObs.map(
             dsr -> {
@@ -596,7 +628,7 @@ public class GatewayAddressCache implements IAddressCache {
             if (!(exception instanceof CosmosException)) {
                 // wrap in CosmosException
                 logger.error("Network failure", exception);
-                dce = BridgeInternal.createCosmosException(0, exception);
+                dce = BridgeInternal.createCosmosException(request.requestContext.resourcePhysicalAddress, 0, exception);
                 BridgeInternal.setRequestHeaders(dce, request.getHeaders());
             } else {
                 dce = (CosmosException) exception;
@@ -622,14 +654,39 @@ public class GatewayAddressCache implements IAddressCache {
     }
 
     private Pair<PartitionKeyRangeIdentity, AddressInformation[]> toPartitionAddressAndRange(String collectionRid, List<Address> addresses) {
-        logger.debug("toPartitionAddressAndRange");
+        if (logger.isDebugEnabled()) {
+            logger.debug("toPartitionAddressAndRange");
+        }
+
         Address address = addresses.get(0);
+        PartitionKeyRangeIdentity partitionKeyRangeIdentity = new PartitionKeyRangeIdentity(collectionRid, address.getParitionKeyRangeId());
 
         AddressInformation[] addressInfos =
                 addresses.stream().map(addr ->
                                 GatewayAddressCache.toAddressInformation(addr)
                                       ).collect(Collectors.toList()).toArray(new AddressInformation[addresses.size()]);
-        return Pair.of(new PartitionKeyRangeIdentity(collectionRid, address.getParitionKeyRangeId()), addressInfos);
+
+        if (this.tcpConnectionEndpointRediscoveryEnabled) {
+            for (AddressInformation addressInfo : addressInfos) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug(
+                        "Added address to serverPartitionAddressToPkRangeIdMap: ({\"partitionKeyRangeIdentity\":{},\"address\":{}})",
+                        partitionKeyRangeIdentity,
+                        addressInfo);
+                }
+
+                this.serverPartitionAddressToPkRangeIdMap.compute(addressInfo.getServerKey(), (serverKey, partitionKeyRangeIdentitySet) -> {
+                    if (partitionKeyRangeIdentitySet == null) {
+                        partitionKeyRangeIdentitySet = ConcurrentHashMap.newKeySet();
+                    }
+
+                    partitionKeyRangeIdentitySet.add(partitionKeyRangeIdentity);
+                    return partitionKeyRangeIdentitySet;
+                });
+            }
+        }
+
+        return Pair.of(partitionKeyRangeIdentity, addressInfos);
     }
 
     private static AddressInformation toAddressInformation(Address address) {

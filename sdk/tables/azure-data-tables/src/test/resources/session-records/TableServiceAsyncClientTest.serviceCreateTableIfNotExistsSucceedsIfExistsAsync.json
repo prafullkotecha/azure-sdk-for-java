@@ -1,0 +1,54 @@
+{
+  "networkCallRecords" : [ {
+    "Method" : "POST",
+    "Uri" : "https://REDACTED.table.core.windows.net/Tables",
+    "Headers" : {
+      "x-ms-version" : "2019-02-02",
+      "User-Agent" : "azsdk-java-azure-data-tables/12.0.0-beta.4 (11.0.6; Windows 10; 10.0)",
+      "x-ms-client-request-id" : "b5952ca2-51e2-47c2-b6b8-5d3d29b67549",
+      "Content-Type" : "application/json;odata=nometadata"
+    },
+    "Response" : {
+      "x-ms-version" : "2019-02-02",
+      "Server" : "Windows-Azure-Table/1.0 Microsoft-HTTPAPI/2.0",
+      "X-Content-Type-Options" : "nosniff",
+      "retry-after" : "0",
+      "StatusCode" : "204",
+      "Date" : "Tue, 09 Feb 2021 06:52:27 GMT",
+      "Cache-Control" : "no-cache",
+      "DataServiceId" : "https://brsiegelsample.table.core.windows.net/Tables('test66826ac2a8')",
+      "Content-Length" : "0",
+      "x-ms-request-id" : "d79ded4d-5002-007d-48b0-febb7f000000",
+      "Preference-Applied" : "return-no-content",
+      "x-ms-client-request-id" : "b5952ca2-51e2-47c2-b6b8-5d3d29b67549",
+      "Location" : "https://brsiegelsample.table.core.windows.net/Tables('test66826ac2a8')"
+    },
+    "Exception" : null
+  }, {
+    "Method" : "POST",
+    "Uri" : "https://REDACTED.table.core.windows.net/Tables",
+    "Headers" : {
+      "x-ms-version" : "2019-02-02",
+      "User-Agent" : "azsdk-java-azure-data-tables/12.0.0-beta.4 (11.0.6; Windows 10; 10.0)",
+      "x-ms-client-request-id" : "96646a99-f36c-4c22-9ecf-05da1c313212",
+      "Content-Type" : "application/json;odata=nometadata"
+    },
+    "Response" : {
+      "Transfer-Encoding" : "chunked",
+      "x-ms-version" : "2019-02-02",
+      "Server" : "Windows-Azure-Table/1.0 Microsoft-HTTPAPI/2.0",
+      "X-Content-Type-Options" : "nosniff",
+      "retry-after" : "0",
+      "StatusCode" : "409",
+      "Date" : "Tue, 09 Feb 2021 06:52:27 GMT",
+      "Cache-Control" : "no-cache",
+      "x-ms-request-id" : "d79ded5e-5002-007d-56b0-febb7f000000",
+      "Body" : "{\"odata.error\":{\"code\":\"TableAlreadyExists\",\"message\":{\"lang\":\"en-US\",\"value\":\"The table specified already exists.\\nRequestId:d79ded5e-5002-007d-56b0-febb7f000000\\nTime:2021-02-09T06:52:27.4321483Z\"}}}",
+      "Preference-Applied" : "return-no-content",
+      "x-ms-client-request-id" : "96646a99-f36c-4c22-9ecf-05da1c313212",
+      "Content-Type" : "application/json;odata=minimalmetadata;streaming=true;charset=utf-8"
+    },
+    "Exception" : null
+  } ],
+  "variables" : [ "test66826ac2a8" ]
+}

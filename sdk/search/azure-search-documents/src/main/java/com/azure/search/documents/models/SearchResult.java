@@ -5,10 +5,10 @@ package com.azure.search.documents.models;
 
 import com.azure.core.annotation.Fluent;
 import com.azure.core.util.logging.ClientLogger;
-import com.azure.core.util.serializer.JacksonAdapter;
 import com.azure.core.util.serializer.JsonSerializer;
-import com.azure.core.util.serializer.SerializerEncoding;
 import com.azure.search.documents.SearchDocument;
+import com.azure.search.documents.implementation.converters.SearchResultHelper;
+import com.azure.search.documents.implementation.util.Utility;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.azure.core.util.serializer.TypeReference.createInstance;
-import static com.azure.search.documents.implementation.util.Utility.initializeSerializerAdapter;
 
 /**
  * Contains a document found by a search query, plus associated metadata.
@@ -53,8 +52,24 @@ public final class SearchResult {
     @JsonIgnore
     private JsonSerializer jsonSerializer;
 
-    private static final JacksonAdapter searchJacksonAdapter = (JacksonAdapter) initializeSerializerAdapter();
+    static {
+        SearchResultHelper.setAccessor(new SearchResultHelper.SearchResultAccessor() {
+            @Override
+            public void setAdditionalProperties(SearchResult searchResult, SearchDocument additionalProperties) {
+                searchResult.setAdditionalProperties(additionalProperties);
+            }
 
+            @Override
+            public void setHighlights(SearchResult searchResult, Map<String, List<String>> highlights) {
+                searchResult.setHighlights(highlights);
+            }
+
+            @Override
+            public void setJsonSerializer(SearchResult searchResult, JsonSerializer jsonSerializer) {
+                searchResult.setJsonSerializer(jsonSerializer);
+            }
+        });
+    }
     /**
      * Constructor of {@link SearchResult}.
      *
@@ -79,8 +94,7 @@ public final class SearchResult {
     public <T> T getDocument(Class<T> modelClass) {
         if (jsonSerializer == null) {
             try {
-                String serializedJson = searchJacksonAdapter.serialize(additionalProperties, SerializerEncoding.JSON);
-                return searchJacksonAdapter.deserialize(serializedJson, modelClass, SerializerEncoding.JSON);
+                return Utility.convertValue(additionalProperties, modelClass);
             } catch (IOException ex) {
                 throw logger.logExceptionAsError(new RuntimeException("Failed to deserialize search result.", ex));
             }
@@ -110,5 +124,35 @@ public final class SearchResult {
      */
     public Map<String, List<String>> getHighlights() {
         return this.highlights;
+    }
+
+    /**
+     * The private setter to set the additionalProperties property
+     * via {@link SearchResultHelper.SearchResultAccessor}.
+     *
+     * @param additionalProperties The Unmatched properties from the message are deserialized this collection.
+     */
+    private void setAdditionalProperties(SearchDocument additionalProperties) {
+        this.additionalProperties = additionalProperties;
+    }
+
+    /**
+     * The private setter to set the highlights property
+     * via {@link SearchResultHelper.SearchResultAccessor}.
+     *
+     * @param highlights The Text fragments from the document that indicate the matching search terms.
+     */
+    private void setHighlights(Map<String, List<String>> highlights) {
+        this.highlights = highlights;
+    }
+
+    /**
+     * The private setter to set the jsonSerializer property
+     * via {@link SearchResultHelper.SearchResultAccessor}.
+     *
+     * @param jsonSerializer The json serializer.
+     */
+    private void setJsonSerializer(JsonSerializer jsonSerializer) {
+        this.jsonSerializer = jsonSerializer;
     }
 }

@@ -3,10 +3,11 @@
 
 package com.azure.ai.metricsadvisor.models;
 
+import com.azure.ai.metricsadvisor.implementation.util.DataFeedHelper;
 import com.azure.core.annotation.Fluent;
 
 import java.time.OffsetDateTime;
-import java.util.List;
+import java.util.Map;
 
 /**
  * The Data feed metadata model.
@@ -14,7 +15,7 @@ import java.util.List;
 @Fluent
 public final class DataFeed {
     private String id;
-    private List<String> metricIds;
+    private Map<String, String> metricIds;
     private OffsetDateTime createdTime;
     private DataFeedStatus dataFeedStatus;
     private DataFeedSourceType dataFeedSourceType;
@@ -27,6 +28,44 @@ public final class DataFeed {
     private String dataFeedName;
     private DataFeedSchema dataFeedSchema;
 
+    static {
+        DataFeedHelper.setAccessor(new DataFeedHelper.DataFeedAccessor() {
+            @Override
+            public void setId(DataFeed feed, String id) {
+                feed.setId(id);
+            }
+
+            @Override
+            public void setMetricIds(DataFeed feed, Map<String, String> metricIds) {
+                feed.setMetricIds(metricIds);
+            }
+
+            @Override
+            public void setCreatedTime(DataFeed feed, OffsetDateTime createdTime) {
+                feed.setCreatedTime(createdTime);
+            }
+
+            @Override
+            public void setStatus(DataFeed feed, DataFeedStatus dataFeedStatus) {
+                feed.setStatus(dataFeedStatus);
+            }
+
+            @Override
+            public void setSourceType(DataFeed feed, DataFeedSourceType dataFeedSourceType) {
+                feed.setSourceType(dataFeedSourceType);
+            }
+
+            @Override
+            public void setIsAdmin(DataFeed feed, boolean isAdmin) {
+                feed.setIsAdmin(isAdmin);
+            }
+
+            @Override
+            public void setCreator(DataFeed feed, String creator) {
+                feed.setCreator(creator);
+            }
+        });
+    }
     // ReadOnly:start
 
     /**
@@ -43,7 +82,7 @@ public final class DataFeed {
      *
      * @return the metricIds value.
      */
-    public List<String> getMetricIds() {
+    public Map<String, String> getMetricIds() {
         return this.metricIds;
     }
 
@@ -217,6 +256,34 @@ public final class DataFeed {
      */
     public DataFeed setOptions(DataFeedOptions dataFeedOptions) {
         this.dataFeedOptions = dataFeedOptions;
-        return null;
+        return this;
+    }
+
+    void setId(String id) {
+        this.id = id;
+    }
+
+    void setMetricIds(Map<String, String> metricIds) {
+        this.metricIds = metricIds;
+    }
+
+    void setCreatedTime(OffsetDateTime createdTime) {
+        this.createdTime = createdTime;
+    }
+
+    void setStatus(DataFeedStatus dataFeedStatus) {
+        this.dataFeedStatus = dataFeedStatus;
+    }
+
+    void setSourceType(DataFeedSourceType dataFeedSourceType) {
+        this.dataFeedSourceType = dataFeedSourceType;
+    }
+
+    void setIsAdmin(boolean isAdmin) {
+        this.isAdmin = isAdmin;
+    }
+
+    void setCreator(String creator) {
+        this.creator = creator;
     }
 }

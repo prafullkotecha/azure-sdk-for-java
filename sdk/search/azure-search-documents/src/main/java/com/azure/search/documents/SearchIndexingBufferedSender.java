@@ -3,6 +3,7 @@
 
 package com.azure.search.documents;
 
+import com.azure.core.annotation.ServiceClient;
 import com.azure.core.util.Context;
 import com.azure.search.documents.models.IndexAction;
 import com.azure.search.documents.models.IndexActionType;
@@ -15,8 +16,9 @@ import java.util.Collection;
  * This class provides a buffered sender that contains operations for conveniently indexing documents to an Azure Search
  * index.
  */
+@ServiceClient(builder = SearchClientBuilder.class)
 public final class SearchIndexingBufferedSender<T> {
-    private final SearchIndexingBufferedAsyncSender<T> client;
+    final SearchIndexingBufferedAsyncSender<T> client;
 
     SearchIndexingBufferedSender(SearchIndexingBufferedAsyncSender<T> client) {
         this.client = client;
@@ -27,17 +29,19 @@ public final class SearchIndexingBufferedSender<T> {
      *
      * @return The list of {@link IndexAction IndexActions} in the batch that are ready to be indexed.
      */
-    public Collection<IndexAction<?>> getActions() {
+    public Collection<IndexAction<T>> getActions() {
         return client.getActions();
     }
 
     /**
-     * Gets the batch size.
+     * Gets the number of documents required in a batch for it to be flushed.
+     * <p>
+     * This configuration is only taken into account if auto flushing is enabled.
      *
-     * @return The batch size.
+     * @return The number of documents required before a flush is triggered.
      */
-    public int getBatchSize() {
-        return client.getBatchSize();
+    int getBatchActionCount() {
+        return client.getBatchActionCount();
     }
 
     /**

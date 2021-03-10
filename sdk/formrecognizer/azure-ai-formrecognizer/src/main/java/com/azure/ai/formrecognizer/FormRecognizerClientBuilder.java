@@ -31,7 +31,6 @@ import com.azure.core.util.logging.ClientLogger;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,7 +98,6 @@ public final class FormRecognizerClientBuilder {
     private FormRecognizerServiceVersion version;
 
     static final String OCP_APIM_SUBSCRIPTION_KEY = "Ocp-Apim-Subscription-Key";
-    static final Duration DEFAULT_DURATION = Duration.ofSeconds(5);
     /**
      * The constructor with defaults.
      */
@@ -112,8 +110,8 @@ public final class FormRecognizerClientBuilder {
         clientVersion = properties.getOrDefault(VERSION, "UnknownVersion");
 
         headers = new HttpHeaders()
-            .put(ECHO_REQUEST_ID_HEADER, "true")
-            .put(ACCEPT_HEADER, CONTENT_TYPE_HEADER_VALUE);
+            .set(ECHO_REQUEST_ID_HEADER, "true")
+            .set(ACCEPT_HEADER, CONTENT_TYPE_HEADER_VALUE);
     }
 
     /**

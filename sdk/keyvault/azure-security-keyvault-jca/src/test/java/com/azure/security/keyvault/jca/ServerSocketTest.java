@@ -30,9 +30,8 @@ import java.security.cert.X509Certificate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * The unit test validating the ServerSocket is created using a certificate from Azure KeyVault.
- *
- * @author Manfred Riem (manfred.riem@microsoft.com)
+ * The unit test validating the ServerSocket is created using a certificate 
+ * from Azure Key Vault.
  */
 public class ServerSocketTest {
 
@@ -53,7 +52,7 @@ public class ServerSocketTest {
         /*
          * Setup server side.
          *
-         *  - Create an Azure KeyVault specific instance of a KeyStore.
+         *  - Create an Azure Key Vault specific instance of a KeyStore.
          *  - Set the KeyManagerFactory to use that KeyStore.
          *  - Set the SSL context to use the KeyManagerFactory.
          *  - Create the SSLServerSocket using th SSL context.
@@ -61,9 +60,10 @@ public class ServerSocketTest {
         KeyStore ks = KeyStore.getInstance("AzureKeyVault");
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            null,
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         ks.load(parameter);
 
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -158,7 +158,7 @@ public class ServerSocketTest {
         /*
          * Setup server side.
          *
-         *  - Create an Azure KeyVault specific instance of a KeyStore.
+         *  - Create an Azure Key Vault specific instance of a KeyStore.
          *  - Set the KeyManagerFactory to use that KeyStore.
          *  - Set the SSL context to use the KeyManagerFactory.
          *  - Create the SSLServerSocket using th SSL context.
@@ -166,9 +166,10 @@ public class ServerSocketTest {
         KeyStore ks = KeyStore.getInstance("AzureKeyVault");
         KeyVaultLoadStoreParameter parameter = new KeyVaultLoadStoreParameter(
             System.getProperty("azure.keyvault.uri"),
-            System.getProperty("azure.tenant.id"),
-            System.getProperty("azure.client.id"),
-            System.getProperty("azure.client.secret"));
+            null,
+            System.getProperty("azure.keyvault.tenant-id"),
+            System.getProperty("azure.keyvault.client-id"),
+            System.getProperty("azure.keyvault.client-secret"));
         ks.load(parameter);
 
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());

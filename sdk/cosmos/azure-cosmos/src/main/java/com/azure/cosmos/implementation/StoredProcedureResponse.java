@@ -83,7 +83,7 @@ public final class StoredProcedureResponse {
     public double getRequestCharge() {
         String value = this.response.getResponseHeaders().get(HttpConstants.HttpHeaders.REQUEST_CHARGE);
         try {
-            return Double.valueOf(value);
+            return Double.parseDouble(value);
         } catch (NumberFormatException e) {
             logger.warn("INVALID x-ms-request-charge value {}.", value);
             return 0;
@@ -134,5 +134,9 @@ public final class StoredProcedureResponse {
      */
     public CosmosDiagnostics getCosmosDiagnostics() {
         return this.response.getCosmosDiagnostics();
+    }
+
+    public RxDocumentServiceResponse getRxDocumentServiceResponse() {
+        return response;
     }
 }

@@ -31,7 +31,7 @@ import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class LinkHandlerTest {
@@ -110,7 +110,7 @@ class LinkHandlerTest {
         handler.onLinkLocalClose(event);
 
         // Assert
-        verifyZeroInteractions(session);
+        verifyNoInteractions(session);
     }
 
     /**
@@ -150,6 +150,40 @@ class LinkHandlerTest {
         StepVerifier.create(handler.getEndpointStates())
             .expectNext(EndpointState.UNINITIALIZED)
             .then(() -> handler.onLinkRemoteClose(event))
+            .expectNext(EndpointState.CLOSED)
+            .expectErrorSatisfies(error -> {
+                Assertions.assertTrue(error instanceof AmqpException);
+
+                AmqpException exception = (AmqpException) error;
+                Assertions.assertEquals(LINK_STOLEN, exception.getErrorCondition());
+            })
+            .verify();
+
+        // Assert
+        verify(link).setCondition(errorCondition);
+        verify(link).close();
+
+        verify(session, never()).setCondition(errorCondition);
+        verify(session, never()).close();
+    }
+
+    /**
+     * Verifies that a Remote Detach event.
+     */
+    @Test
+    void onLinkRemoteDetach() {
+        // Arrange
+        final ErrorCondition errorCondition = new ErrorCondition(symbol, description);
+
+        when(link.getRemoteCondition()).thenReturn(errorCondition);
+        when(link.getSession()).thenReturn(session);
+
+        when(session.getLocalState()).thenReturn(EndpointState.ACTIVE);
+
+        // Act
+        StepVerifier.create(handler.getEndpointStates())
+            .expectNext(EndpointState.UNINITIALIZED)
+            .then(() -> handler.onLinkRemoteDetach(event))
             .expectNext(EndpointState.CLOSED)
             .expectErrorSatisfies(error -> {
                 Assertions.assertTrue(error instanceof AmqpException);

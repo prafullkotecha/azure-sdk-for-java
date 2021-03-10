@@ -53,7 +53,7 @@ public final class ManageResourceFromMSIEnabledVirtualMachineBelongsToAADGroup {
         final String password = Utils.password();
         final Region region = Region.US_SOUTH_CENTRAL;
 
-        final String installScript = "https://raw.githubusercontent.com/Azure/azure-libraries-for-java/master/azure-samples/src/main/resources/create_resources_with_msi.sh";
+        final String installScript = "https://raw.githubusercontent.com/Azure/azure-sdk-for-java/master/sdk/resourcemanager/azure-resourcemanager-samples/src/main/resources/create_resources_with_msi.sh";
         String installCommand = "bash create_resources_with_msi.sh {stgName} {rgName} {location}";
         List<String> fileUris = new ArrayList<>();
         fileUris.add(installScript);
@@ -108,7 +108,7 @@ public final class ManageResourceFromMSIEnabledVirtualMachineBelongsToAADGroup {
                         .withPopularLinuxImage(KnownLinuxVirtualMachineImage.UBUNTU_SERVER_16_04_LTS)
                         .withRootUsername(userName)
                         .withRootPassword(password)
-                        .withSize(VirtualMachineSizeTypes.STANDARD_DS2_V2)
+                        .withSize(VirtualMachineSizeTypes.fromString("Standard_D2a_v4"))
                         .withOSDiskCaching(CachingTypes.READ_WRITE)
                         .withSystemAssignedManagedServiceIdentity()
                         .create();

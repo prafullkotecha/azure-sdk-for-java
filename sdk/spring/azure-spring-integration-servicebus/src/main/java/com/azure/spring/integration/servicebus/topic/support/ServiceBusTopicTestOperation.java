@@ -5,6 +5,7 @@ package com.azure.spring.integration.servicebus.topic.support;
 
 import com.azure.spring.integration.servicebus.ServiceBusMessageHandler;
 import com.azure.spring.integration.servicebus.ServiceBusRuntimeException;
+import com.azure.spring.integration.servicebus.converter.ServiceBusMessageConverter;
 import com.azure.spring.integration.servicebus.factory.ServiceBusTopicClientFactory;
 import com.azure.spring.integration.servicebus.topic.ServiceBusTopicTemplate;
 import com.google.common.collect.ArrayListMultimap;
@@ -20,13 +21,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+/**
+ * A test implementation of {@link ServiceBusTopicTemplate}. This is used for testing.
+ */
 public class ServiceBusTopicTestOperation extends ServiceBusTopicTemplate {
     private final Multimap<String, IMessage> topicsByName = ArrayListMultimap.create();
     private final Map<String, Map<String, ServiceBusMessageHandler<?>>> handlersByNameAndGroup =
         new ConcurrentHashMap<>();
 
     public ServiceBusTopicTestOperation(ServiceBusTopicClientFactory clientFactory) {
-        super(clientFactory);
+        super(clientFactory, new ServiceBusMessageConverter());
     }
 
     @Override
@@ -44,7 +48,7 @@ public class ServiceBusTopicTestOperation extends ServiceBusTopicTemplate {
     }
 
     @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected void internalSubscribe(String name, String consumerGroup, Consumer<Message<?>> consumer,
                                      Class<?> payloadType) {
         ISubscriptionClient subscriptionClient = this.senderFactory.getOrCreateSubscriptionClient(name, consumerGroup);

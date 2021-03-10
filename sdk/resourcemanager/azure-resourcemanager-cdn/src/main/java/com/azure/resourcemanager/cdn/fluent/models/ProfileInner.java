@@ -12,6 +12,7 @@ import com.azure.resourcemanager.cdn.models.ProfileResourceState;
 import com.azure.resourcemanager.cdn.models.Sku;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Map;
 
 /**
  * CDN profile is a logical grouping of endpoints that share the same settings, such as CDN provider and pricing tier.
@@ -39,6 +40,12 @@ public class ProfileInner extends Resource {
      */
     @JsonProperty(value = "properties.provisioningState", access = JsonProperty.Access.WRITE_ONLY)
     private String provisioningState;
+
+    /*
+     * The Id of the frontdoor.
+     */
+    @JsonProperty(value = "properties.frontdoorId", access = JsonProperty.Access.WRITE_ONLY)
+    private String frontdoorId;
 
     /**
      * Get the sku property: The pricing tier (defines a CDN provider, feature list and rate) of the CDN profile.
@@ -76,6 +83,29 @@ public class ProfileInner extends Resource {
      */
     public String provisioningState() {
         return this.provisioningState;
+    }
+
+    /**
+     * Get the frontdoorId property: The Id of the frontdoor.
+     *
+     * @return the frontdoorId value.
+     */
+    public String frontdoorId() {
+        return this.frontdoorId;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ProfileInner withLocation(String location) {
+        super.withLocation(location);
+        return this;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ProfileInner withTags(Map<String, String> tags) {
+        super.withTags(tags);
+        return this;
     }
 
     /**
